@@ -1,32 +1,232 @@
 /* src/index.css */
+
+/* Tailwind CSS directives - MUST be at the very top */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* * CSS Variables for Light and Dark Mode
+ * These define the color palette for the entire application.
+ * Light mode colors are the default, and dark mode colors are applied
+ * when the 'dark' class is added to the <html> tag.
+ */
+
+/* Default (Light Mode) colors as CSS variables */
+:root {
+  /* Backgrounds */
+  --bg-primary: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-non-gpa: #fffbe6;
+  --bg-gpa-result: #e0f2fe;
+  --bg-gpa-overall: #fef9c3;
+  --bg-credits-info: #e0f7fa;
+  --bg-alert-danger: #fee2e2;
+  --bg-alert-success: #d1fae5;
+  --bg-select: #f1f5f9;
+  --bg-toggle-button: #e2e8f0;
+
+  /* Text Colors */
+  --text-primary: #334155;
+  --text-secondary: #64748b;
+  --text-title: #2563eb;
+  --text-gpa-value: #059669;
+  --text-gpa-overall: #ca8a04;
+  --text-alert-danger-main: #dc2626;
+  --text-alert-danger-dark: #b91c1c;
+  --text-alert-success: #059669;
+  --text-semester-title: #0ea5e9;
+  --text-credits-info: #00796b;
+  --text-icon-light: #1e40af; /* For Moon icon */
+  --text-icon-dark: #f59e0b;  /* For Sun icon */
+  
+  /* Borders */
+  --border-card: #e5e7eb;
+  --border-alert-danger: #dc2626;
+  --border-alert-success: #059669;
+  --border-select: #cbd5e1;
+  --border-select-nongpa: #ef4444; /* Specific for non-GPA select border */
+  --border-divider: #e5e7eb;
+
+  /* Shadows */
+  --shadow-default: rgba(0, 0, 0, 0.05); /* shadow-black/5 */
+  --shadow-card: rgba(0, 0, 0, 0.1);     /* shadow-black/10 (general use) */
+  --shadow-card-lg: rgba(0, 0, 0, 0.08); /* shadow-black/8 (for welcome card) */
+  --shadow-blue: rgba(37, 99, 235, 0.1); /* shadow-blue-600/10 (for GPA result card) */
+  --shadow-blue-btn: rgba(37, 99, 235, 0.2); /* shadow-blue-600/20 (for blue buttons) */
+  --shadow-yellow: rgba(245, 158, 66, 0.09); /* shadow-yellow-500/10 (for overall GPA card) */
+  --shadow-orange-btn: rgba(245, 158, 66, 0.3); /* shadow-orange-500/30 (for reset button) */
+  --shadow-slate-btn: rgba(100, 116, 139, 0.2); /* shadow-slate-600/20 (for back button/disabled) */
+}
+
+/* Dark Mode colors override using CSS variables, applied when 'dark' class is present on <html> */
+html.dark {
+  /* Backgrounds */
+  --bg-primary: #1a202c;
+  --bg-card: #2d3748;
+  --bg-card-non-gpa: #3d320a;
+  --bg-gpa-result: #1c2a4a;
+  --bg-gpa-overall: #362e08;
+  --bg-credits-info: #1b3a3a;
+  --bg-alert-danger: #4a1919;
+  --bg-alert-success: #1a3a2a;
+  --bg-select: #4a5568;
+  --bg-toggle-button: #374151;
+
+  /* Text Colors */
+  --text-primary: #e2e8f0;
+  --text-secondary: #a0aec0;
+  --text-title: #63b3ed;
+  --text-gpa-value: #68d391;
+  --text-gpa-overall: #f6ad55;
+  --text-alert-danger-main: #ef4444;
+  --text-alert-danger-dark: #fca5a5;
+  --text-alert-success: #68d391;
+  --text-semester-title: #38bdf8;
+  --text-credits-info: #2dd4bf;
+  --text-icon-light: #63b3ed;
+  --text-icon-dark: #f6e05e;
+
+  /* Borders */
+  --border-card: #4a5568;
+  --border-alert-danger: #ef4444;
+  --border-alert-success: #68d391;
+  --border-select: #64748b;
+  --border-select-nongpa: #ef4444;
+  --border-divider: #4a5568;
+
+  /* Shadows - Adjusted for dark mode, using darker shades or primary colors */
+  --shadow-default: rgba(0, 0, 0, 0.3);
+  --shadow-card: rgba(0, 0, 0, 0.3);
+  --shadow-card-lg: rgba(0, 0, 0, 0.3);
+  --shadow-blue: rgba(0, 0, 0, 0.3);
+  --shadow-blue-btn: rgba(0, 0, 0, 0.3);
+  --shadow-yellow: rgba(0, 0, 0, 0.3);
+  --shadow-orange-btn: rgba(0, 0, 0, 0.3);
+  --shadow-slate-btn: rgba(0, 0, 0, 0.3);
+}
+
+/* * Global Body Styles
+ * Uses CSS variables for background and text colors to support theming.
+ * Includes smooth transitions for color changes.
+ */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  /* Using Inter font as per previous discussions, with fallbacks */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.5s ease;
+
+  /* Applying themed colors via CSS variables */
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  /* Smooth transition for background and text color changes */
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Styles for <code> tags */
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
-html.dark ::-webkit-scrollbar {
-  background: #1e293b;
-}
-html.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
+
+/* * Scrollbar Styles (for WebKit browsers like Chrome, Safari)
+ * Uses CSS variables to ensure scrollbars also adapt to the theme.
+ */
+
+/* Light mode scrollbar styles */
 html ::-webkit-scrollbar {
-  background: #f1f5f9;
+  width: 10px; /* Width of the scrollbar */
+  background: var(--bg-select); /* Track background, usually a light gray */
 }
+
 html ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-select); /* Thumb color, a slightly darker gray */
+  border-radius: 5px; /* Rounded corners for the thumb */
 }
+
+/* Dark mode scrollbar styles */
+html.dark ::-webkit-scrollbar {
+  background: var(--bg-primary); /* Dark mode track background, using primary dark background */
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--bg-card); /* Dark mode thumb color, a darker gray */
+  border-radius: 5px; /* Rounded corners for the thumb */
+}
+
+/* * Tailwind Class Overrides using CSS Variables
+ * This section ensures that specific Tailwind utility classes, 
+ * which might otherwise ignore CSS variables in dark mode, 
+ * correctly use the defined variables.
+ * We're effectively mapping existing Tailwind color classes to our CSS variables.
+ */
+
+/* General transition property for all elements that change colors */
+.transition-colors {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-duration: 500ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Backgrounds */
+.bg-slate-50 { background-color: var(--bg-primary); }
+.bg-white { background-color: var(--bg-card); }
+.bg-yellow-50 { background-color: var(--bg-card-non-gpa); }
+.bg-red-100 { background-color: var(--bg-alert-danger); }
+.bg-green-100 { background-color: var(--bg-alert-success); }
+.bg-blue-50 { background-color: var(--bg-gpa-result); }
+.bg-cyan-50 { background-color: var(--bg-credits-info); }
+.bg-slate-100 { background-color: var(--bg-select); }
+.bg-slate-200 { background-color: var(--bg-toggle-button); } /* Default toggle button background */
+
+/* Text Colors */
+.text-gray-800 { color: var(--text-primary); }
+.text-gray-700 { color: var(--text-secondary); }
+.text-blue-600 { color: var(--text-title); }
+.text-gray-500 { color: var(--text-secondary); }
+.text-yellow-600 { color: var(--text-gpa-overall); }
+.text-amber-700 { color: var(--text-gpa-overall); }
+.text-green-600 { color: var(--text-gpa-value); }
+.text-red-700 { color: var(--text-alert-danger-main); }
+.text-red-800 { color: var(--text-alert-danger-dark); }
+.text-sky-500 { color: var(--text-semester-title); }
+.text-teal-800 { color: var(--text-credits-info); }
+
+/* Icon Colors */
+.text-blue-700 { color: var(--text-icon-light); }
+.text-yellow-500 { color: var(--text-icon-dark); }
+
+/* Buttons background colors - mapping to CSS variables */
+.bg-blue-600 { background-color: var(--text-title); } /* Using --text-title variable for blue buttons */
+.bg-orange-400 { background-color: var(--bg-toggle-button); } /* Using --bg-toggle-button for orange reset */
+.bg-slate-600 { background-color: var(--bg-toggle-button); } /* Using --bg-toggle-button for slate back button */
+
+/* Borders */
+.border-red-600 { border-color: var(--border-alert-danger); }
+.border-green-600 { border-color: var(--border-alert-success); }
+.border-slate-400 { border-color: var(--border-select); }
+.border-red-500 { border-color: var(--border-select-nongpa); } /* Specific red border for non-GPA selects */
+.bg-gray-200 { background-color: var(--border-divider); } /* Divider uses a background color */
+
+
+/* Shadows - Overriding default Tailwind shadows to use CSS Variables */
+.shadow-md { 
+    box-shadow: 0 4px 6px -1px var(--shadow-default), 0 2px 4px -2px var(--shadow-default); 
+}
+.shadow-lg { 
+    box-shadow: 0 10px 15px -3px var(--shadow-card), 0 4px 6px -4px var(--shadow-card); 
+}
+.shadow-sm { 
+    box-shadow: 0 1px 2px 0 var(--shadow-default); 
+}
+
+/* Specific custom shadows using their respective variables */
+.shadow-black\/10 { box-shadow: 0 4px 16px var(--shadow-card); }
+.shadow-yellow-500\/10 { box-shadow: 0 4px 12px var(--shadow-yellow); }
+.shadow-blue-600\/10 { box-shadow: 0 2px 4px var(--shadow-blue); }
+.shadow-blue-600\/20 { box-shadow: 0 2px 4px var(--shadow-blue-btn); }
+.shadow-orange-500\/30 { box-shadow: 0 4px 6px var(--shadow-orange-btn); }
+.shadow-slate-600\/20 { box-shadow: 0 2px 4px var(--shadow-slate-btn); }

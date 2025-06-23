@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Moon, Sun } from 'lucide-react'; // Importing icons for the theme toggle button
+import { Moon, Sun } from "lucide-react"; // Importing icons for the theme toggle button
 
 // The main App component where all the logic and UI reside.
 const App = () => {
@@ -15,15 +15,15 @@ const App = () => {
   // State to display warning messages to the user, particularly when they cannot proceed to the next year.
   const [warningMessage, setWarningMessage] = useState("");
   // New state for managing the current theme: 'light' or 'dark'.
-  const [theme, setTheme] = useState('light'); // Default to light theme
+  const [theme, setTheme] = useState("light"); // Default to light theme
 
   // This useEffect hook will handle adding/removing the 'dark' class to the <html> tag.
-  // This is crucial for Tailwind CSS's dark mode functionality.
+  // This is crucial for applying CSS Variables based on the theme.
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
     // No cleanup needed here as classList operations are idempotent.
   }, [theme]); // This effect runs whenever the 'theme' state changes.
@@ -359,7 +359,11 @@ const App = () => {
             }
 
             // Rule 2: Count GPA credits with grade point >= 2.00 (C or better).
-            if (grade && gpvTable[grade] !== undefined && gpvTable[grade] >= 2.0) {
+            if (
+              grade &&
+              gpvTable[grade] !== undefined &&
+              gpvTable[grade] >= 2.0
+            ) {
               min20CreditsWith2 += subject.gpaCredits;
             }
 
@@ -378,7 +382,8 @@ const App = () => {
       }
 
       // Initial check for progression based on original rules.
-      let canProceed = !failedNonGpaSubject && cPassCount < 3 && notSitCount < 3;
+      let canProceed =
+        !failedNonGpaSubject && cPassCount < 3 && notSitCount < 3;
       const gpa =
         totalCredits > 0 ? (totalGPAValue / totalCredits).toFixed(2) : "0.00";
       let msg = "";
@@ -662,19 +667,53 @@ const App = () => {
    * Renders the entry (welcome) page of the application.
    */
   const renderEntryPage = () => (
-    <div className="min-h-screen flex flex-col justify-center items-center p-5 bg-slate-50 dark:bg-gray-900 font-inter transition-colors duration-500">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 flex flex-col items-center shadow-lg shadow-black/10 dark:shadow-black/30 mb-10 w-full max-w-md transition-colors duration-500">
+    <div
+      className="min-h-screen flex flex-col justify-center items-center p-5 font-inter transition-colors duration-500"
+      style={{ backgroundColor: "var(--bg-primary)" }}
+    >
+      {" "}
+      {/* Apply bg using CSS variable */}
+      <div
+        className="rounded-2xl p-8 flex flex-col items-center shadow-lg mb-10 w-full max-w-md transition-colors duration-500"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          boxShadow:
+            "0 10px 15px -3px var(--shadow-card-lg), 0 4px 6px -4px var(--shadow-card-lg)",
+        }}
+      >
+        {" "}
+        {/* Use CSS variables for bg and shadow */}
         <p className="text-5xl mb-2">🎓</p>
-        <p className="text-3xl font-bold text-gray-800 dark:text-white">Welcome to</p>
-        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2 text-center">
+        <p
+          className="text-3xl font-bold"
+          style={{ color: "var(--text-primary)" }}
+        >
+          Welcome to
+        </p>{" "}
+        {/* Use CSS variable for text color */}
+        <p
+          className="text-3xl font-bold mb-2 text-center"
+          style={{ color: "var(--text-title)" }}
+        >
+          {" "}
+          {/* Use CSS variable for text color */}
           Colombo BIT GPA Calculator
         </p>
-        <p className="text-base text-gray-700 dark:text-gray-300 text-center mb-7 mt-2">
+        <p
+          className="text-base text-center mb-7 mt-2"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {" "}
+          {/* Use CSS variable for text color */}
           Easily calculate your GPA for each year and semester. Start by tapping
           the button below!
         </p>
         <button
-          className="bg-blue-600 dark:bg-blue-700 py-4 px-8 rounded-lg flex items-center justify-center mt-4 w-full text-white text-lg font-bold tracking-wide transition duration-300 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          className="py-4 px-8 rounded-lg flex items-center justify-center mt-4 w-full text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          style={{
+            backgroundColor: "var(--text-title)",
+            boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+          }}
           onClick={() => setCurrentScreen("year1")}
         >
           Start Calculating GPA
@@ -682,10 +721,20 @@ const App = () => {
       </div>
       {/* Footer Section */}
       <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-tight mb-0.5">
-          © {new Date().getFullYear()} Eshan Jayawardana. All rights reserved.
+        <p
+          className="text-sm font-medium tracking-tight mb-0.5"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {" "}
+          {/* Use CSS variable for text color */}© {new Date().getFullYear()}{" "}
+          Eshan Jayawardana. All rights reserved.
         </p>
-        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-tight">
+        <p
+          className="text-sm font-medium tracking-tight"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          {" "}
+          {/* Use CSS variable for text color */}
           DevoPlus™
         </p>
       </div>
@@ -711,84 +760,183 @@ const App = () => {
       { label: "Year 1", ...getYearCalculationStatus("year1") },
       { label: "Year 2", ...getYearCalculationStatus("year2") },
       { label: "Year 3", ...getYearCalculationStatus("year3") },
-    ].filter(y => y.warningMsg);
+    ].filter((y) => y.warningMsg);
 
     return (
-      <div className="min-h-screen flex flex-col items-center p-4 bg-slate-50 dark:bg-gray-900 font-inter relative transition-colors duration-500">
-        <div className="bg-yellow-50 dark:bg-yellow-950 rounded-3xl flex flex-col items-center p-8 mt-16 mb-8 shadow-md shadow-yellow-500/10 dark:shadow-black/30 w-full max-w-md transition-colors duration-500">
+      <div
+        className="min-h-screen flex flex-col items-center p-4 font-inter relative transition-colors duration-500"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
+        {" "}
+        {/* Apply bg using CSS variable */}
+        <div
+          className="rounded-3xl flex flex-col items-center p-8 mt-16 mb-8 shadow-md w-full max-w-md transition-colors duration-500"
+          style={{
+            backgroundColor: "var(--bg-gpa-overall)",
+            boxShadow: "0 4px 12px var(--shadow-yellow)",
+          }}
+        >
+          {" "}
+          {/* Use CSS variables for bg and shadow */}
           <p className="text-5xl mb-2">🏆</p>
-          <p className="text-2xl text-yellow-600 dark:text-yellow-400 font-bold mb-1.5">
+          <p
+            className="text-2xl font-bold mb-1.5"
+            style={{ color: "var(--text-gpa-overall)" }}
+          >
+            {" "}
+            {/* Use CSS variable for text color */}
             Your Overall GPA
           </p>
-          <p className="text-5xl text-amber-700 dark:text-amber-300 font-bold mt-0.5">
+          <p
+            className="text-5xl font-bold mt-0.5"
+            style={{ color: "var(--text-gpa-overall)" }}
+          >
+            {" "}
+            {/* Use CSS variable for text color */}
             {overallGpa.toFixed(2)}
           </p>
         </div>
-
         {/* Display eligibility or reasons for not being eligible */}
         {eligible ? (
-          <div className="bg-green-100 dark:bg-green-950 rounded-2xl flex flex-col items-center p-6 mt-4 mb-6 border-2 border-green-600 dark:border-green-400 w-full max-w-md transition-colors duration-500">
+          <div
+            className="rounded-2xl flex flex-col items-center p-6 mt-4 mb-6 border-2 w-full max-w-md transition-colors duration-500"
+            style={{
+              backgroundColor: "var(--bg-alert-success)",
+              borderColor: "var(--border-alert-success)",
+            }}
+          >
+            {" "}
+            {/* Use CSS variables for bg and border */}
             <p className="text-4xl mb-2">🎉</p>
-            <p className="text-lg text-green-600 dark:text-green-400 font-bold text-center">
+            <p
+              className="text-lg font-bold text-center"
+              style={{ color: "var(--text-alert-success)" }}
+            >
+              {" "}
+              {/* Use CSS variable for text color */}
               Congratulations! You are eligible to be awarded the BIT Degree.
             </p>
           </div>
         ) : (
-          <div className="bg-red-100 dark:bg-red-950 rounded-2xl flex flex-col items-start p-5 mt-4 mb-6 border-2 border-red-600 dark:border-red-400 w-full max-w-md transition-colors duration-500">
-            <p className="text-lg text-red-700 dark:text-red-400 font-bold mb-2">
+          <div
+            className="rounded-2xl flex flex-col items-start p-5 mt-4 mb-6 border-2 w-full max-w-md transition-colors duration-500"
+            style={{
+              backgroundColor: "var(--bg-alert-danger)",
+              borderColor: "var(--border-alert-danger)",
+            }}
+          >
+            {" "}
+            {/* Use CSS variables for bg and border */}
+            <p
+              className="text-lg font-bold mb-2"
+              style={{ color: "var(--text-alert-danger-main)" }}
+            >
+              {" "}
+              {/* Use CSS variable for text color */}
               You are not eligible for the BIT Degree because:
             </p>
             {failed.map((reason, idx) => (
-              <p key={idx} className="text-base text-red-800 dark:text-red-300 mb-1">
-                • {reason}
+              <p
+                key={idx}
+                className="text-base mb-1"
+                style={{ color: "var(--text-alert-danger-dark)" }}
+              >
+                {" "}
+                {/* Use CSS variable for text color */}• {reason}
               </p>
             ))}
           </div>
         )}
-
         {/* Show repeat subjects if not eligible and there are subjects to repeat */}
         {!eligible && repeatSubjects.length > 0 && (
-          <div className="bg-red-100 dark:bg-red-950 rounded-2xl flex flex-col items-start p-5 mt-4 mb-6 border-2 border-red-600 dark:border-red-400 w-full max-w-md transition-colors duration-500">
-            <p className="text-lg text-red-700 dark:text-red-400 font-bold mb-2">
+          <div
+            className="rounded-2xl flex flex-col items-start p-5 mt-4 mb-6 border-2 w-full max-w-md transition-colors duration-500"
+            style={{
+              backgroundColor: "var(--bg-alert-danger)",
+              borderColor: "var(--border-alert-danger)",
+            }}
+          >
+            {" "}
+            {/* Use CSS variables for bg and border */}
+            <p
+              className="text-lg font-bold mb-2"
+              style={{ color: "var(--text-alert-danger-main)" }}
+            >
+              {" "}
+              {/* Use CSS variable for text color */}
               You must repeat the following subjects:
             </p>
             {repeatSubjects.map((subj, idx) => (
-              <p key={idx} className="text-base text-red-800 dark:text-red-300 mb-1">
-                • {subj}
+              <p
+                key={idx}
+                className="text-base mb-1"
+                style={{ color: "var(--text-alert-danger-dark)" }}
+              >
+                {" "}
+                {/* Use CSS variable for text color */}• {subj}
               </p>
             ))}
           </div>
         )}
-
         {/* Show per-year warnings if any */}
         {yearWarnings.length > 0 && (
-          <div className="flex flex-row gap-4 justify-center items-stretch w-full max-w-4xl mx-auto mt-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-stretch w-full max-w-4xl mx-auto mt-4 mb-6">
             {yearWarnings.map((y, idx) => (
               <div
                 key={idx}
-                className="bg-red-100 dark:bg-red-950 rounded-2xl flex flex-col items-start p-5 border-2 border-red-600 dark:border-red-400 flex-1 min-w-0 transition-colors duration-500"
+                className="rounded-2xl flex flex-col items-start p-5 border-2 flex-1 min-w-0 transition-colors duration-500"
+                style={{
+                  backgroundColor: "var(--bg-alert-danger)",
+                  borderColor: "var(--border-alert-danger)",
+                }}
               >
-                <p className="text-lg text-red-700 dark:text-red-400 font-bold mb-2">
+                <p
+                  className="text-lg font-bold mb-2"
+                  style={{ color: "var(--text-alert-danger-main)" }}
+                >
                   {y.label} Warning
                 </p>
-                <p className="text-base text-red-800 dark:text-red-300">
+                <p
+                  className="text-base"
+                  style={{ color: "var(--text-alert-danger-dark)" }}
+                >
                   {y.warningMsg}
                 </p>
               </div>
             ))}
           </div>
         )}
-
+        {!eligible && (
+  <button
+    className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-3 shadow-md text-slate-800 dark:text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-sm mx-auto bg-slate-200 dark:bg-slate-700"
+    style={{
+      backgroundColor: "#808080",
+      color: "white",
+      boxShadow: "0 2px 4px var(--shadow-slate-btn)",
+    }}
+    onClick={() => setCurrentScreen("year3")}
+  >
+    <span className="mr-2 text-lg">←</span> Go Back
+  </button>
+)}
         <button
-          className="bg-blue-600 dark:bg-blue-700 py-4 rounded-xl flex items-center justify-center mt-3 mb-3 shadow-sm shadow-blue-600/20 dark:shadow-black/30 text-white text-lg font-bold tracking-wide w-full max-w-sm transition duration-300 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          onClick={() => setCurrentScreen("entry")} // Go back to the entry page to start over
+          className="py-4 rounded-xl flex items-center justify-center mt-3 mb-3 shadow-sm text-white text-lg font-bold tracking-wide w-full max-w-sm transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          style={{
+            backgroundColor: "var(--text-title)",
+            boxShadow: "0 1px 2px var(--shadow-blue-btn)",
+          }}
+          onClick={() => setCurrentScreen("year1")} // Go back to the first page to start over
         >
           Start Over
         </button>
-
         {/* Footer Section */}
         <footer className="w-full flex flex-col items-center justify-center mt-auto py-6">
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-tight mb-0.5">
+          <p
+            className="text-sm font-medium tracking-tight mb-0.5"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {" "}
+            {/* Use CSS variable for text color */}
             Developed By Eshan Jayawardana | DevoPlus
           </p>
         </footer>
@@ -834,18 +982,41 @@ const App = () => {
     }`;
 
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-gray-900 font-inter transition-colors duration-500">
+      <div
+        className="min-h-screen w-full flex flex-col items-center justify-center font-inter transition-colors duration-500"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
+        {" "}
+        {/* Apply bg using CSS variable */}
         <div className="flex-1 overflow-y-auto pb-20 pt-8 w-full max-w-5xl mx-auto px-4 md:px-8">
           {" "}
           {/* Simulate ScrollView */}
-          <p className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 text-center mb-5 tracking-wide">
+          <p
+            className="text-3xl md:text-4xl font-bold text-center mb-5 tracking-wide"
+            style={{ color: "var(--text-title)" }}
+          >
+            {" "}
+            {/* Use CSS variable for text color */}
             {yearLabel} GPA Calculation
           </p>
           {/* Display warning message if any */}
           {warningMessage ? (
-            <div className="bg-red-100 dark:bg-red-950 rounded-xl flex flex-row items-center p-3 mb-4 border border-red-600 dark:border-red-400 max-w-2xl mx-auto w-full transition-colors duration-500">
+            <div
+              className="rounded-xl flex flex-row items-center p-3 mb-4 border max-w-2xl mx-auto w-full transition-colors duration-500"
+              style={{
+                backgroundColor: "var(--bg-alert-danger)",
+                borderColor: "var(--border-alert-danger)",
+              }}
+            >
+              {" "}
+              {/* Use CSS variables for bg and border */}
               <p className="text-2xl mr-2">⚠️</p>
-              <p className="text-base text-red-700 dark:text-red-400 font-bold flex-1">
+              <p
+                className="text-base font-bold flex-1"
+                style={{ color: "var(--text-alert-danger-main)" }}
+              >
+                {" "}
+                {/* Use CSS variable for text color */}
                 {warningMessage}
               </p>
             </div>
@@ -853,29 +1024,61 @@ const App = () => {
           {/* Semester Cards Side by Side */}
           <div className="flex flex-col md:flex-row gap-4 mb-4 w-full max-w-4xl mx-auto">
             {/* Left Card (Semester 1/3/5) */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md shadow-black/5 dark:shadow-black/30 flex-1 min-w-0 transition-colors duration-500">
-              <p className="text-xl font-bold text-sky-500 dark:text-sky-300 mb-3 tracking-tight">
+            <div
+              className="rounded-2xl p-5 shadow-md flex-1 min-w-0 transition-colors duration-500"
+              style={{
+                backgroundColor: "var(--bg-card)",
+                boxShadow: "0 4px 6px var(--shadow-card)",
+              }}
+            >
+              {" "}
+              {/* Use CSS variables for bg and shadow */}
+              <p
+                className="text-xl font-bold mb-3 tracking-tight"
+                style={{ color: "var(--text-semester-title)" }}
+              >
+                {" "}
+                {/* Use CSS variable for text color */}
                 Semester {year === "year1" ? 1 : year === "year2" ? 3 : 5}
               </p>
               {subjects[year][semesterKey1].map((subject, idx) => (
                 <div
                   key={subject.code}
-                  className={`mb-0 ${
-                    subject.isNonGpa ? "bg-yellow-50 dark:bg-yellow-900 rounded-lg p-2 mb-2 transition-colors duration-500" : ""
+                  className={`mb-0 transition-colors duration-500 ${
+                    subject.isNonGpa ? "rounded-lg p-2 mb-2" : ""
                   }`}
+                  style={
+                    subject.isNonGpa
+                      ? { backgroundColor: "" }
+                      : {}
+                  } /* Use CSS variable for bg */
                 >
                   <div className="flex justify-between items-center mb-0.5">
-                    <p className="text-base font-semibold text-gray-700 dark:text-gray-200 flex-1">
+                    <p
+                      className="text-base font-semibold flex-1"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {" "}
+                      {/* Use CSS variable for text color */}
                       {subject.name}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 ml-2 font-medium">
+                    <p
+                      className="text-sm ml-2 font-medium"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {" "}
+                      {/* Use CSS variable for text color */}
                       {subject.credits} Credits
                     </p>
                   </div>
                   <div
-                    className={`bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-400 dark:border-slate-600 mt-1.5 mb-2 overflow-hidden ${
-                      subject.isNonGpa ? "border-red-500 dark:border-red-400" : ""
-                    } transition-colors duration-500`}
+                    className={`rounded-lg border mt-1.5 mb-2 overflow-hidden transition-colors duration-500`}
+                    style={{
+                      backgroundColor: "var(--bg-select)",
+                      borderColor: subject.isNonGpa
+                        ? "var(--border-select-nongpa)"
+                        : "var(--border-select)",
+                    }} /* Use CSS variables for bg and border */
                   >
                     <select
                       value={
@@ -891,7 +1094,11 @@ const App = () => {
                           e.target.value
                         )
                       }
-                      className="w-full min-w-[140px] h-14 text-gray-700 dark:text-gray-200 bg-slate-100 dark:bg-gray-700 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors duration-500"
+                      className="w-full min-w-[140px] h-14 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-500"
+                      style={{
+                        color: "var(--text-select)",
+                        backgroundColor: "var(--bg-select)",
+                      }} /* Use CSS variables for text and bg */
                     >
                       <option value="">Select Grade</option>
                       {(subject.isNonGpa
@@ -905,35 +1112,66 @@ const App = () => {
                     </select>
                   </div>
                   {idx !== subjects[year][semesterKey1].length - 1 && (
-                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 rounded transition-colors duration-500" />
+                    <div
+                      className="h-px my-1 rounded transition-colors duration-500"
+                      style={{ backgroundColor: "var(--border-divider)" }}
+                    />
                   )}
                 </div>
               ))}
             </div>
             {/* Right Card (Semester 2/4/6) */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-md shadow-black/5 dark:shadow-black/30 flex-1 min-w-0 transition-colors duration-500">
-              <p className="text-xl font-bold text-sky-500 dark:text-sky-300 mb-3 tracking-tight">
+            <div
+              className="rounded-2xl p-5 shadow-md flex-1 min-w-0 transition-colors duration-500"
+              style={{
+                backgroundColor: "var(--bg-card)",
+                boxShadow: "0 4px 6px var(--shadow-card)",
+              }}
+            >
+              <p
+                className="text-xl font-bold mb-3 tracking-tight"
+                style={{ color: "var(--text-semester-title)" }}
+              >
                 Semester {year === "year1" ? 2 : year === "year2" ? 4 : 6}
               </p>
               {subjects[year][semesterKey2].map((subject, idx) => (
                 <div
                   key={subject.code}
-                  className={`mb-0 ${
-                    subject.isNonGpa ? "bg-yellow-50 dark:bg-yellow-900 rounded-lg p-2 mb-2 transition-colors duration-500" : ""
+                  className={`mb-0 transition-colors duration-500 ${
+                    subject.isNonGpa ? "rounded-lg p-2 mb-2" : ""
                   }`}
+                  style={
+                    subject.isNonGpa
+                      ? { backgroundColor: "" }
+                      : {}
+                  } /* Use CSS variable for bg */
                 >
                   <div className="flex justify-between items-center mb-0.5">
-                    <p className="text-base font-semibold text-gray-700 dark:text-gray-200 flex-1">
+                    <p
+                      className="text-base font-semibold flex-1"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {" "}
+                      {/* Use CSS variable for text color */}
                       {subject.name}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 ml-2 font-medium">
+                    <p
+                      className="text-sm ml-2 font-medium"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {" "}
+                      {/* Use CSS variable for text color */}
                       {subject.credits} Credits
                     </p>
                   </div>
                   <div
-                    className={`bg-slate-100 dark:bg-gray-700 rounded-lg border border-slate-400 dark:border-slate-600 mt-1.5 mb-2 overflow-hidden ${
-                      subject.isNonGpa ? "border-red-500 dark:border-red-400" : ""
-                    } transition-colors duration-500`}
+                    className={`rounded-lg border mt-1.5 mb-2 overflow-hidden transition-colors duration-500`}
+                    style={{
+                      backgroundColor: "var(--bg-select)",
+                      borderColor: subject.isNonGpa
+                        ? "var(--border-select-nongpa)"
+                        : "var(--border-select)",
+                    }} /* Use CSS variables for bg and border */
                   >
                     <select
                       value={
@@ -949,7 +1187,11 @@ const App = () => {
                           e.target.value
                         )
                       }
-                      className="w-full min-w-[140px] h-14 text-gray-700 dark:text-gray-200 bg-slate-100 dark:bg-gray-700 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-colors duration-500"
+                      className="w-full min-w-[140px] h-14 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-500"
+                      style={{
+                        color: "var(--text-select)",
+                        backgroundColor: "var(--bg-select)",
+                      }} /* Use CSS variables for text and bg */
                     >
                       <option value="">Select Grade</option>
                       {(subject.isNonGpa
@@ -963,35 +1205,63 @@ const App = () => {
                     </select>
                   </div>
                   {idx !== subjects[year][semesterKey2].length - 1 && (
-                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 rounded transition-colors duration-500" />
+                    <div
+                      className="h-px my-1 rounded transition-colors duration-500"
+                      style={{ backgroundColor: "var(--border-divider)" }}
+                    />
                   )}
                 </div>
               ))}
             </div>
           </div>
           {/* GPA Result Card */}
-          <div className="bg-blue-50 dark:bg-blue-950 rounded-2xl flex flex-col items-center p-6 mt-4 mb-6 shadow-sm shadow-blue-600/10 dark:shadow-black/30 max-w-2xl mx-auto w-full transition-colors duration-500">
+          <div
+            className="rounded-2xl flex flex-col items-center p-6 mt-4 mb-6 shadow-sm max-w-2xl mx-auto w-full transition-colors duration-500"
+            style={{
+              backgroundColor: "var(--bg-gpa-result)",
+              boxShadow: "0 1px 2px var(--shadow-blue)",
+            }}
+          >
             <p className="text-4xl mb-1.5">🎯</p>
-            <p className="text-lg text-blue-600 dark:text-blue-400 font-bold mb-1">
+            <p
+              className="text-lg font-bold mb-1"
+              style={{ color: "var(--text-title)" }}
+            >
               Your {yearLabel} GPA
             </p>
-            <p className="text-4xl text-green-600 dark:text-green-400 font-bold mt-0.5">{gpa}</p>
+            <p
+              className="text-4xl font-bold mt-0.5"
+              style={{ color: "var(--text-gpa-value)" }}
+            >
+              {gpa}
+            </p>
           </div>
-
           {/* Credits Info Card */}
-          <div className="bg-cyan-50 dark:bg-cyan-950 rounded-xl p-4 mt-3 mb-6 shadow-sm shadow-black/5 dark:shadow-black/30 max-w-2xl mx-auto w-full transition-colors duration-500">
-            <p className="text-base text-teal-800 dark:text-teal-300 text-center font-medium">
+          <div
+            className="rounded-xl p-4 mt-3 mb-6 shadow-sm max-w-2xl mx-auto w-full transition-colors duration-500"
+            style={{
+              backgroundColor: "var(--bg-credits-info)",
+              boxShadow: "0 1px 2px var(--shadow-default)",
+            }}
+          >
+            <p
+              className="text-base text-center font-medium"
+              style={{ color: "var(--text-credits-info)" }}
+            >
               Total Credits Earned This Year:{" "}
               <span className="font-bold">{earnedCredits}</span>
             </p>
           </div>
-
           {/* Reset Button */}
           <div className="flex justify-center mb-2 max-w-2xl mx-auto w-full">
             <button
-              className="bg-orange-400 dark:bg-orange-600 py-3 px-8 rounded-lg flex items-center justify-center mt-1 mb-2 shadow-md shadow-orange-500/30 dark:shadow-black/30 text-white text-base font-bold tracking-wide transition duration-300 hover:bg-orange-500 dark:hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
+              className="py-3 px-8 rounded-lg flex items-center justify-center mt-1 mb-2 shadow-md text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
+              style={{
+                backgroundColor: "orange",
+                boxShadow: "0 4px 6px var(--shadow-orange-btn)",
+              }} /* Use CSS variables for bg and shadow */
               onClick={() => {
-                // Create a new grades object to reset grades for this year to empty.
+                // Reset all grades for this year to empty string
                 const newGrades = { ...grades };
                 Object.keys(subjects[year]).forEach((semesterKey) => {
                   newGrades[year][semesterKey] = {}; // Reset the semester to an empty object
@@ -1008,22 +1278,27 @@ const App = () => {
           </div>
           {/* Next Year Button */}
           <button
-            className="w-full py-4 rounded-xl flex items-center justify-center my-3 shadow-md
-              bg-blue-600 dark:bg-blue-700 shadow-blue-600/20 dark:shadow-black/30 hover:bg-blue-700 dark:hover:bg-blue-600
-              text-white text-lg font-bold tracking-wide transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 max-w-2xl mx-auto"
-            onClick={() => {
-              setWarningMessage(""); // Optionally clear warning
-              setCurrentScreen(
-                year === "year1" ? "year2" : year === "year2" ? "year3" : "overall"
-              );
-            }}
-          >
-            {nextYearButtonLabel}
-          </button>
+  className="w-full py-4 rounded-xl flex items-center justify-center my-3 shadow-md
+    bg-blue-600 dark:bg-blue-700 shadow-blue-600/20 dark:shadow-black/30 hover:bg-blue-700 dark:hover:bg-blue-600
+    text-white text-lg font-bold tracking-wide transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 max-w-2xl mx-auto"
+  onClick={() => {
+    setWarningMessage(""); // Optionally clear warning
+    setCurrentScreen(
+      year === "year1" ? "year2" : year === "year2" ? "year3" : "overall"
+    );
+  }}
+>
+  {nextYearButtonLabel}
+</button>
+
           {/* Back Button (if not Year 1) */}
           {year !== "year1" && (
             <button
-              className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-8 shadow-md bg-slate-600 dark:bg-slate-700 shadow-slate-600/20 dark:shadow-black/30 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-base font-bold tracking-wide transition duration-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-2xl mx-auto"
+              className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-8 shadow-md text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-2xl mx-auto"
+              style={{
+                backgroundColor: "#808080",
+                boxShadow: "0 2px 4px var(--shadow-slate-btn)",
+              }} /* Use CSS variables for bg and shadow */
               onClick={() => {
                 // Navigate back to the previous year.
                 if (year === "year2") setCurrentScreen("year1");
@@ -1040,24 +1315,27 @@ const App = () => {
 
   // Function to toggle theme between 'light' and 'dark'.
   const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
   return (
-    // The main container div. Now, the 'dark' class is NOT applied here directly.
-    // Instead, the useEffect hook applies it to document.documentElement (<html> tag).
-    // This allows the Tailwind 'dark:' variants to work globally.
+    // The main container div. The background and text color are handled by CSS variables on the body.
+    // The `html.dark` class on the documentElement controls the variables.
     <div className="min-h-screen font-inter">
       {/* Theme Toggle Button - positioned fixed for all pages */}
       <button
         onClick={toggleTheme}
-        className="fixed top-5 right-5 p-3 rounded-full bg-slate-200 dark:bg-gray-700 text-gray-800 dark:text-white shadow-md transition-colors duration-300 z-50 hover:scale-105"
+        className="fixed top-5 right-5 p-3 rounded-full shadow-md transition-colors duration-300 z-50 hover:scale-105"
+        style={{
+          backgroundColor: "var(--bg-toggle-button)",
+          boxShadow: "0 4px 6px var(--shadow-default)",
+        }} /* Use CSS variables for bg and shadow */
         aria-label="Toggle theme"
       >
-        {theme === 'light' ? (
-          <Moon size={20} className="text-blue-700" /> // Moon icon for light mode
+        {theme === "light" ? (
+          <Moon size={20} style={{ color: "var(--text-icon-light)" }} />
         ) : (
-          <Sun size={20} className="text-yellow-500" /> // Sun icon for dark mode
+          <Sun size={20} style={{ color: "var(--text-icon-dark)" }} />
         )}
       </button>
 
@@ -1084,4 +1362,3 @@ const App = () => {
 
 // Export the App component as default.
 export default App;
-
