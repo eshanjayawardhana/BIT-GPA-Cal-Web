@@ -709,37 +709,37 @@ const App = () => {
           the button below!
         </p>
         <div className="flex flex-row gap-4 w-full mt-4">
-    <button
-      className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-      style={{
-        backgroundColor: "var(--text-title)",
-        boxShadow: "0 2px 4px var(--shadow-blue-btn)",
-      }}
-      onClick={() => setCurrentScreen("year1")}
-    >
-      Year 1
-    </button>
-    <button
-      className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-      style={{
-        backgroundColor: "var(--text-title)",
-        boxShadow: "0 2px 4px var(--shadow-blue-btn)",
-      }}
-      onClick={() => setCurrentScreen("year2")}
-    >
-      Year 2
-    </button>
-    <button
-      className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-      style={{
-        backgroundColor: "var(--text-title)",
-        boxShadow: "0 2px 4px var(--shadow-blue-btn)",
-      }}
-      onClick={() => setCurrentScreen("year3")}
-    >
-      Year 3
-    </button>
-  </div>
+          <button
+            className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            style={{
+              backgroundColor: "var(--text-title)",
+              boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+            }}
+            onClick={() => setCurrentScreen("year1")}
+          >
+            Year 1
+          </button>
+          <button
+            className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            style={{
+              backgroundColor: "var(--text-title)",
+              boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+            }}
+            onClick={() => setCurrentScreen("year2")}
+          >
+            Year 2
+          </button>
+          <button
+            className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            style={{
+              backgroundColor: "var(--text-title)",
+              boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+            }}
+            onClick={() => setCurrentScreen("year3")}
+          >
+            Year 3
+          </button>
+        </div>
       </div>
       {/* Footer Section */}
       <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center justify-center">
@@ -929,18 +929,18 @@ const App = () => {
           </div>
         )}
         {!eligible && (
-  <button
-    className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-3 shadow-md text-slate-800 dark:text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-sm mx-auto bg-slate-200 dark:bg-slate-700"
-    style={{
-      backgroundColor: "#808080",
-      color: "white",
-      boxShadow: "0 2px 4px var(--shadow-slate-btn)",
-    }}
-    onClick={() => setCurrentScreen("year3")}
-  >
-    <span className="mr-2 text-lg">←</span> Go Back
-  </button>
-)}
+          <button
+            className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-3 shadow-md text-slate-800 dark:text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-sm mx-auto bg-slate-200 dark:bg-slate-700"
+            style={{
+              backgroundColor: "#808080",
+              color: "white",
+              boxShadow: "0 2px 4px var(--shadow-slate-btn)",
+            }}
+            onClick={() => setCurrentScreen("year3")}
+          >
+            <span className="mr-2 text-lg">←</span> Go Back
+          </button>
+        )}
         <button
           className="py-4 rounded-xl flex items-center justify-center mt-3 mb-3 shadow-sm text-white text-lg font-bold tracking-wide w-full max-w-sm transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           style={{
@@ -976,6 +976,7 @@ const App = () => {
     const { gpa, canProceed } = getYearCalculationStatus(year);
 
     let earnedCredits = 0;
+    let earnedGpaCredits = 0;
     // Calculate total earned credits for the current year.
     for (const semesterKey in subjects[year]) {
       subjects[year][semesterKey].forEach((subject) => {
@@ -983,6 +984,9 @@ const App = () => {
         // Only count credits if a grade is selected and it's not "Not Sit".
         if (grade && grade !== "" && grade !== "Not Sit") {
           earnedCredits += subject.credits;
+          if (!subject.isNonGpa) {
+            earnedGpaCredits += subject.gpaCredits; // <-- Only GPA subjects
+          }
         }
       });
     }
@@ -1070,9 +1074,7 @@ const App = () => {
                     subject.isNonGpa ? "rounded-lg p-2 mb-2" : ""
                   }`}
                   style={
-                    subject.isNonGpa
-                      ? { backgroundColor: "" }
-                      : {}
+                    subject.isNonGpa ? { backgroundColor: "" } : {}
                   } /* Use CSS variable for bg */
                 >
                   <div className="flex justify-between items-center mb-0.5">
@@ -1163,9 +1165,7 @@ const App = () => {
                     subject.isNonGpa ? "rounded-lg p-2 mb-2" : ""
                   }`}
                   style={
-                    subject.isNonGpa
-                      ? { backgroundColor: "" }
-                      : {}
+                    subject.isNonGpa ? { backgroundColor: "" } : {}
                   } /* Use CSS variable for bg */
                 >
                   <div className="flex justify-between items-center mb-0.5">
@@ -1273,6 +1273,13 @@ const App = () => {
               Total Credits Earned This Year:{" "}
               <span className="font-bold">{earnedCredits}</span>
             </p>
+            <p
+              className="text-base text-center font-medium mt-1"
+              style={{ color: "var(--text-credits-info)" }}
+            >
+              Total <span className="font-bold">GPA Credits</span> Earned This
+              Year: <span className="font-bold">{earnedGpaCredits}</span>
+            </p>
           </div>
           {/* Reset Button */}
           <div className="flex justify-center mb-2 max-w-2xl mx-auto w-full">
@@ -1300,19 +1307,22 @@ const App = () => {
           </div>
           {/* Next Year Button */}
           <button
-  className="w-full py-4 rounded-xl flex items-center justify-center my-3 shadow-md
+            className="w-full py-4 rounded-xl flex items-center justify-center my-3 shadow-md
     bg-blue-600 dark:bg-blue-700 shadow-blue-600/20 dark:shadow-black/30 hover:bg-blue-700 dark:hover:bg-blue-600
     text-white text-lg font-bold tracking-wide transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 max-w-2xl mx-auto"
-  onClick={() => {
-    setWarningMessage(""); // Optionally clear warning
-    setCurrentScreen(
-      year === "year1" ? "year2" : year === "year2" ? "year3" : "overall"
-    );
-  }}
->
-  {nextYearButtonLabel}
-</button>
-
+            onClick={() => {
+              setWarningMessage(""); // Optionally clear warning
+              setCurrentScreen(
+                year === "year1"
+                  ? "year2"
+                  : year === "year2"
+                  ? "year3"
+                  : "overall"
+              );
+            }}
+          >
+            {nextYearButtonLabel}
+          </button>
           {/* Back Button (if not Year 1) */}
           {year !== "year1" && (
             <button
