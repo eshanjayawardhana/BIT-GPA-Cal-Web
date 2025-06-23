@@ -708,16 +708,38 @@ const App = () => {
           Easily calculate your GPA for each year and semester. Start by tapping
           the button below!
         </p>
-        <button
-          className="py-4 px-8 rounded-lg flex items-center justify-center mt-4 w-full text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          style={{
-            backgroundColor: "var(--text-title)",
-            boxShadow: "0 2px 4px var(--shadow-blue-btn)",
-          }}
-          onClick={() => setCurrentScreen("year1")}
-        >
-          Start Calculating GPA
-        </button>
+        <div className="flex flex-row gap-4 w-full mt-4">
+    <button
+      className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      style={{
+        backgroundColor: "var(--text-title)",
+        boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+      }}
+      onClick={() => setCurrentScreen("year1")}
+    >
+      Year 1
+    </button>
+    <button
+      className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      style={{
+        backgroundColor: "var(--text-title)",
+        boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+      }}
+      onClick={() => setCurrentScreen("year2")}
+    >
+      Year 2
+    </button>
+    <button
+      className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      style={{
+        backgroundColor: "var(--text-title)",
+        boxShadow: "0 2px 4px var(--shadow-blue-btn)",
+      }}
+      onClick={() => setCurrentScreen("year3")}
+    >
+      Year 3
+    </button>
+  </div>
       </div>
       {/* Footer Section */}
       <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center justify-center">
@@ -925,7 +947,7 @@ const App = () => {
             backgroundColor: "var(--text-title)",
             boxShadow: "0 1px 2px var(--shadow-blue-btn)",
           }}
-          onClick={() => setCurrentScreen("year1")} // Go back to the first page to start over
+          onClick={() => setCurrentScreen("entry")} // Go back to the entry page to start over
         >
           Start Over
         </button>
