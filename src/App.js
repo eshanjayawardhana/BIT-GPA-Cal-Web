@@ -88,7 +88,7 @@ const App = () => {
       semester2: [
         {
           code: "EN2106",
-          name: "Communication Skills I (EN)",
+          name: "Communication Skills I",
           credits: 2,
           gpaCredits: 0,
           isNonGpa: true,
@@ -127,7 +127,7 @@ const App = () => {
       semester3: [
         {
           code: "EN3106",
-          name: "Communication Skills II (EN)",
+          name: "Communication Skills II",
           credits: 2,
           gpaCredits: 0,
           isNonGpa: true,
@@ -389,30 +389,25 @@ const App = () => {
       let msg = "";
 
       // Check Level I & II progression rules (for year1 and year2).
-      if (year === "year1" || year === "year2") {
-        const currentYearGpa = parseFloat(gpa);
-        if (currentYearGpa < 2.0) {
-          canProceed = false;
-          msg = "❗You cannot proceed: GPA must be at least 2.00.";
-        } else if (min20CreditsWith2 < 20) {
-          canProceed = false;
-          msg =
-            "❗You cannot proceed: You need at least 20 GPA credits with grade point 2.00 or above.";
-        } else if (!allEnhancementPass) {
-          canProceed = false;
-          msg =
-            "❗You cannot proceed: All enhancement (non-GPA) courses must be PASS.";
-        } else if (hasGradeBelow1) {
-          canProceed = false;
-          msg =
-            "❗You cannot proceed: You have a course with grade point less than 1.00 (E, F, Not Sit, or empty).";
+      if (year === "year1" || year === "year2" || year === "year3") {
+        // Check for any missing grades in GPA subjects
+        let missingGrade = false;
+        for (const semesterKey in subjects[year]) {
+          subjects[year][semesterKey].forEach((subject) => {
+            if (
+              !subject.isNonGpa &&
+              (grades[year][semesterKey][subject.code] === undefined ||
+                grades[year][semesterKey][subject.code] === "")
+            ) {
+              missingGrade = true;
+            }
+          });
         }
-      }
-
-      // Check Level III progression rules (for year3).
-      if (year === "year3") {
-        const currentYearGpa = parseFloat(gpa);
-        if (currentYearGpa < 2.0) {
+        if (missingGrade) {
+          canProceed = false;
+          msg =
+            "❗You cannot proceed: All GPA subjects must have a grade selected.";
+        } else if (parseFloat(gpa) < 2.0) {
           canProceed = false;
           msg = "❗You cannot proceed: GPA must be at least 2.00.";
         } else if (min20CreditsWith2 < 20) {
@@ -427,6 +422,10 @@ const App = () => {
           canProceed = false;
           msg =
             "❗You cannot proceed: You have a course with grade point less than 1.00 (E, F, Not Sit, or empty).";
+        } else {
+          // All campus criteria are met, so you can proceed, even if there are repeats.
+          canProceed = true;
+          msg = "";
         }
       }
 
@@ -439,11 +438,32 @@ const App = () => {
   useEffect(() => {
     if (currentScreen.startsWith("year")) {
       const { warningMsg } = getYearCalculationStatus(currentScreen);
-      setWarningMessage(warningMsg);
+
+      // Check if all GPA subject grades are empty or undefined for the current year
+      let allEmpty = true;
+      for (const semesterKey in subjects[currentScreen]) {
+        for (const subject of subjects[currentScreen][semesterKey]) {
+          if (
+            !subject.isNonGpa &&
+            grades[currentScreen][semesterKey][subject.code] &&
+            grades[currentScreen][semesterKey][subject.code] !== ""
+          ) {
+            allEmpty = false;
+            break;
+          }
+        }
+        if (!allEmpty) break;
+      }
+
+      if (allEmpty) {
+        setWarningMessage(""); // Suppress warning if all GPA grades are empty
+      } else {
+        setWarningMessage(warningMsg);
+      }
     } else {
       setWarningMessage(""); // Clear warning message on other screens.
     }
-  }, [grades, currentScreen, getYearCalculationStatus]); // Dependencies for useEffect.
+  }, [grades, currentScreen, getYearCalculationStatus]);
 
   /**
    * Handles changes in a subject's selected grade.
@@ -621,8 +641,7 @@ const App = () => {
       levelCcredits.year3 >= 20 &&
       softwareProjectC &&
       allEnhancementPass &&
-      noGradeBelowD &&
-      !hasSubjectBelowC; // Crucial: No subjects with grade below C.
+      noGradeBelowD; // Crucial: No subjects with grade below C.
 
     // Collect all reasons why the user is not eligible.
     const failed = [];
@@ -668,13 +687,13 @@ const App = () => {
    */
   const renderEntryPage = () => (
     <div
-      className="min-h-screen flex flex-col justify-center items-center p-5 font-inter transition-colors duration-500"
+      className="flex flex-col items-center justify-center min-h-screen p-5 transition-colors duration-500 font-inter"
       style={{ backgroundColor: "var(--bg-primary)" }}
     >
       {" "}
       {/* Apply bg using CSS variable */}
       <div
-        className="rounded-2xl p-8 flex flex-col items-center shadow-lg mb-10 w-full max-w-md transition-colors duration-500"
+        className="flex flex-col items-center w-full max-w-md p-8 mb-10 transition-colors duration-500 shadow-lg rounded-2xl"
         style={{
           backgroundColor: "var(--bg-card)",
           boxShadow:
@@ -683,7 +702,7 @@ const App = () => {
       >
         {" "}
         {/* Use CSS variables for bg and shadow */}
-        <p className="text-5xl mb-2">🎓</p>
+        <p className="mb-2 text-5xl">🎓</p>
         <p
           className="text-3xl font-bold"
           style={{ color: "var(--text-primary)" }}
@@ -692,7 +711,7 @@ const App = () => {
         </p>{" "}
         {/* Use CSS variable for text color */}
         <p
-          className="text-3xl font-bold mb-2 text-center"
+          className="mb-2 text-3xl font-bold text-center"
           style={{ color: "var(--text-title)" }}
         >
           {" "}
@@ -700,7 +719,7 @@ const App = () => {
           Colombo BIT GPA Calculator
         </p>
         <p
-          className="text-base text-center mb-7 mt-2"
+          className="mt-2 text-base text-center mb-7"
           style={{ color: "var(--text-secondary)" }}
         >
           {" "}
@@ -708,9 +727,9 @@ const App = () => {
           Easily calculate your GPA for each year and semester. Start by tapping
           the button below!
         </p>
-        <div className="flex flex-row gap-4 w-full mt-4">
+        <div className="flex flex-row w-full gap-4 mt-4">
           <button
-            className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="flex items-center justify-center flex-1 px-2 py-4 text-lg font-bold tracking-wide text-white transition duration-300 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             style={{
               backgroundColor: "var(--text-title)",
               boxShadow: "0 2px 4px var(--shadow-blue-btn)",
@@ -720,7 +739,7 @@ const App = () => {
             Year 1
           </button>
           <button
-            className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="flex items-center justify-center flex-1 px-2 py-4 text-lg font-bold tracking-wide text-white transition duration-300 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             style={{
               backgroundColor: "var(--text-title)",
               boxShadow: "0 2px 4px var(--shadow-blue-btn)",
@@ -730,7 +749,7 @@ const App = () => {
             Year 2
           </button>
           <button
-            className="flex-1 py-4 px-2 rounded-lg flex items-center justify-center text-white text-lg font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            className="flex items-center justify-center flex-1 px-2 py-4 text-lg font-bold tracking-wide text-white transition duration-300 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             style={{
               backgroundColor: "var(--text-title)",
               boxShadow: "0 2px 4px var(--shadow-blue-btn)",
@@ -742,7 +761,7 @@ const App = () => {
         </div>
       </div>
       {/* Footer Section */}
-      <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center justify-center">
+      <div className="absolute left-0 right-0 flex flex-col items-center justify-center bottom-10">
         <p
           className="text-sm font-medium tracking-tight mb-0.5"
           style={{ color: "var(--text-secondary)" }}
@@ -786,13 +805,13 @@ const App = () => {
 
     return (
       <div
-        className="min-h-screen flex flex-col items-center p-4 font-inter relative transition-colors duration-500"
+        className="relative flex flex-col items-center min-h-screen p-4 transition-colors duration-500 font-inter"
         style={{ backgroundColor: "var(--bg-primary)" }}
       >
         {" "}
         {/* Apply bg using CSS variable */}
         <div
-          className="rounded-3xl flex flex-col items-center p-8 mt-16 mb-8 shadow-md w-full max-w-md transition-colors duration-500"
+          className="flex flex-col items-center w-full max-w-md p-8 mt-16 mb-8 transition-colors duration-500 shadow-md rounded-3xl"
           style={{
             backgroundColor: "var(--bg-gpa-overall)",
             boxShadow: "0 4px 12px var(--shadow-yellow)",
@@ -800,7 +819,7 @@ const App = () => {
         >
           {" "}
           {/* Use CSS variables for bg and shadow */}
-          <p className="text-5xl mb-2">🏆</p>
+          <p className="mb-2 text-5xl">🏆</p>
           <p
             className="text-2xl font-bold mb-1.5"
             style={{ color: "var(--text-gpa-overall)" }}
@@ -820,28 +839,53 @@ const App = () => {
         </div>
         {/* Display eligibility or reasons for not being eligible */}
         {eligible ? (
-          <div
-            className="rounded-2xl flex flex-col items-center p-6 mt-4 mb-6 border-2 w-full max-w-md transition-colors duration-500"
-            style={{
-              backgroundColor: "var(--bg-alert-success)",
-              borderColor: "var(--border-alert-success)",
-            }}
-          >
-            {" "}
-            {/* Use CSS variables for bg and border */}
-            <p className="text-4xl mb-2">🎉</p>
-            <p
-              className="text-lg font-bold text-center"
-              style={{ color: "var(--text-alert-success)" }}
+          <>
+            <div
+              className="flex flex-col items-center w-full max-w-md p-6 mt-4 mb-6 transition-colors duration-500 border-2 rounded-2xl"
+              style={{
+                backgroundColor: "var(--bg-alert-success)",
+                borderColor: "var(--border-alert-success)",
+              }}
             >
-              {" "}
-              {/* Use CSS variable for text color */}
-              Congratulations! You are eligible to be awarded the BIT Degree.
-            </p>
-          </div>
+              <p className="mb-2 text-4xl">🎉</p>
+              <p
+                className="text-lg font-bold text-center"
+                style={{ color: "var(--text-alert-success)" }}
+              >
+                Congratulations! You are eligible to be awarded the BIT Degree.
+              </p>
+            </div>
+            {/* Show repeat subjects if any, even if eligible */}
+            {repeatSubjects.length > 0 && (
+              <div
+                className="flex flex-col items-start w-full max-w-md p-5 mt-4 mb-6 transition-colors duration-500 border-2 rounded-2xl"
+                style={{
+                  backgroundColor: "var(--bg-alert-warning)",
+                  borderColor: "var(--border-alert-warning)",
+                }}
+              >
+                <p
+                  className="mb-2 text-lg font-bold"
+                  style={{ color: "var(--text-alert-warning-main)" }}
+                >
+                  You are eligible for the degree, but you must repeat the
+                  following subjects to improve your grades:
+                </p>
+                {repeatSubjects.map((subj, idx) => (
+                  <p
+                    key={idx}
+                    className="mb-1 text-base"
+                    style={{ color: "var(--text-alert-warning-dark)" }}
+                  >
+                    • {subj}
+                  </p>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div
-            className="rounded-2xl flex flex-col items-start p-5 mt-4 mb-6 border-2 w-full max-w-md transition-colors duration-500"
+            className="flex flex-col items-start w-full max-w-md p-5 mt-4 mb-6 transition-colors duration-500 border-2 rounded-2xl"
             style={{
               backgroundColor: "var(--bg-alert-danger)",
               borderColor: "var(--border-alert-danger)",
@@ -850,7 +894,7 @@ const App = () => {
             {" "}
             {/* Use CSS variables for bg and border */}
             <p
-              className="text-lg font-bold mb-2"
+              className="mb-2 text-lg font-bold"
               style={{ color: "var(--text-alert-danger-main)" }}
             >
               {" "}
@@ -860,7 +904,7 @@ const App = () => {
             {failed.map((reason, idx) => (
               <p
                 key={idx}
-                className="text-base mb-1"
+                className="mb-1 text-base"
                 style={{ color: "var(--text-alert-danger-dark)" }}
               >
                 {" "}
@@ -872,7 +916,7 @@ const App = () => {
         {/* Show repeat subjects if not eligible and there are subjects to repeat */}
         {!eligible && repeatSubjects.length > 0 && (
           <div
-            className="rounded-2xl flex flex-col items-start p-5 mt-4 mb-6 border-2 w-full max-w-md transition-colors duration-500"
+            className="flex flex-col items-start w-full max-w-md p-5 mt-4 mb-6 transition-colors duration-500 border-2 rounded-2xl"
             style={{
               backgroundColor: "var(--bg-alert-danger)",
               borderColor: "var(--border-alert-danger)",
@@ -881,7 +925,7 @@ const App = () => {
             {" "}
             {/* Use CSS variables for bg and border */}
             <p
-              className="text-lg font-bold mb-2"
+              className="mb-2 text-lg font-bold"
               style={{ color: "var(--text-alert-danger-main)" }}
             >
               {" "}
@@ -891,7 +935,7 @@ const App = () => {
             {repeatSubjects.map((subj, idx) => (
               <p
                 key={idx}
-                className="text-base mb-1"
+                className="mb-1 text-base"
                 style={{ color: "var(--text-alert-danger-dark)" }}
               >
                 {" "}
@@ -902,18 +946,18 @@ const App = () => {
         )}
         {/* Show per-year warnings if any */}
         {yearWarnings.length > 0 && (
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-stretch w-full max-w-4xl mx-auto mt-4 mb-6">
+          <div className="flex flex-col items-stretch justify-center w-full max-w-4xl gap-4 mx-auto mt-4 mb-6 md:flex-row">
             {yearWarnings.map((y, idx) => (
               <div
                 key={idx}
-                className="rounded-2xl flex flex-col items-start p-5 border-2 flex-1 min-w-0 transition-colors duration-500"
+                className="flex flex-col items-start flex-1 min-w-0 p-5 transition-colors duration-500 border-2 rounded-2xl"
                 style={{
                   backgroundColor: "var(--bg-alert-danger)",
                   borderColor: "var(--border-alert-danger)",
                 }}
               >
                 <p
-                  className="text-lg font-bold mb-2"
+                  className="mb-2 text-lg font-bold"
                   style={{ color: "var(--text-alert-danger-main)" }}
                 >
                   {y.label} Warning
@@ -930,7 +974,7 @@ const App = () => {
         )}
         {!eligible && (
           <button
-            className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-3 shadow-md text-slate-800 dark:text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-sm mx-auto bg-slate-200 dark:bg-slate-700"
+            className="flex items-center justify-center w-full max-w-sm py-3 mx-auto mt-1 mb-3 text-base font-bold tracking-wide transition duration-300 shadow-md rounded-xl text-slate-800 dark:text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 bg-slate-200 dark:bg-slate-700"
             style={{
               backgroundColor: "#808080",
               color: "white",
@@ -942,17 +986,17 @@ const App = () => {
           </button>
         )}
         <button
-          className="py-4 rounded-xl flex items-center justify-center mt-3 mb-3 shadow-sm text-white text-lg font-bold tracking-wide w-full max-w-sm transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          className="flex items-center justify-center w-full max-w-sm py-4 mt-3 mb-3 text-lg font-bold tracking-wide text-white transition duration-300 shadow-sm rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           style={{
             backgroundColor: "var(--text-title)",
             boxShadow: "0 1px 2px var(--shadow-blue-btn)",
           }}
-          onClick={() => setCurrentScreen("entry")} // Go back to the entry page to start over
+          onClick={() => setCurrentScreen("entry")} // Go back to the entry page to Home Page
         >
-          Start Over
+          Home Page
         </button>
         {/* Footer Section */}
-        <footer className="w-full flex flex-col items-center justify-center mt-auto py-6">
+        <footer className="flex flex-col items-center justify-center w-full py-6 mt-auto">
           <p
             className="text-sm font-medium tracking-tight mb-0.5"
             style={{ color: "var(--text-secondary)" }}
@@ -977,16 +1021,25 @@ const App = () => {
 
     let earnedCredits = 0;
     let earnedGpaCredits = 0;
-    // Calculate total earned credits for the current year.
+    // Only count credits for grades C or above (GPV >= 2.0)
     for (const semesterKey in subjects[year]) {
       subjects[year][semesterKey].forEach((subject) => {
         const grade = grades[year][semesterKey][subject.code];
-        // Only count credits if a grade is selected and it's not "Not Sit".
-        if (grade && grade !== "" && grade !== "Not Sit") {
+        // For GPA subjects: count only if grade is C or above
+        if (
+          !subject.isNonGpa &&
+          grade &&
+          grade !== "" &&
+          grade !== "Not Sit" &&
+          gpvTable[grade] !== undefined &&
+          gpvTable[grade] >= 2.0
+        ) {
           earnedCredits += subject.credits;
-          if (!subject.isNonGpa) {
-            earnedGpaCredits += subject.gpaCredits; // <-- Only GPA subjects
-          }
+          earnedGpaCredits += subject.gpaCredits;
+        }
+        // For non-GPA subjects: count only if grade is "Pass"
+        if (subject.isNonGpa && grade === "Pass") {
+          earnedCredits += subject.credits;
         }
       });
     }
@@ -1009,16 +1062,16 @@ const App = () => {
 
     return (
       <div
-        className="min-h-screen w-full flex flex-col items-center justify-center font-inter transition-colors duration-500"
+        className="flex flex-col items-center justify-center w-full min-h-screen transition-colors duration-500 font-inter"
         style={{ backgroundColor: "var(--bg-primary)" }}
       >
         {" "}
         {/* Apply bg using CSS variable */}
-        <div className="flex-1 overflow-y-auto pb-20 pt-8 w-full max-w-5xl mx-auto px-4 md:px-8">
+        <div className="flex-1 w-full max-w-5xl px-4 pt-8 pb-20 mx-auto overflow-y-auto md:px-8">
           {" "}
           {/* Simulate ScrollView */}
           <p
-            className="text-3xl md:text-4xl font-bold text-center mb-5 tracking-wide"
+            className="mb-5 text-3xl font-bold tracking-wide text-center md:text-4xl"
             style={{ color: "var(--text-title)" }}
           >
             {" "}
@@ -1028,7 +1081,7 @@ const App = () => {
           {/* Display warning message if any */}
           {warningMessage ? (
             <div
-              className="rounded-xl flex flex-row items-center p-3 mb-4 border max-w-2xl mx-auto w-full transition-colors duration-500"
+              className="flex flex-row items-center w-full max-w-2xl p-3 mx-auto mb-4 transition-colors duration-500 border rounded-xl"
               style={{
                 backgroundColor: "var(--bg-alert-danger)",
                 borderColor: "var(--border-alert-danger)",
@@ -1036,9 +1089,9 @@ const App = () => {
             >
               {" "}
               {/* Use CSS variables for bg and border */}
-              <p className="text-2xl mr-2">⚠️</p>
+              <p className="mr-2 text-2xl">⚠️</p>
               <p
-                className="text-base font-bold flex-1"
+                className="flex-1 text-base font-bold"
                 style={{ color: "var(--text-alert-danger-main)" }}
               >
                 {" "}
@@ -1048,10 +1101,10 @@ const App = () => {
             </div>
           ) : null}
           {/* Semester Cards Side by Side */}
-          <div className="flex flex-col md:flex-row gap-4 mb-4 w-full max-w-4xl mx-auto">
+          <div className="flex flex-col w-full max-w-4xl gap-4 mx-auto mb-4 md:flex-row">
             {/* Left Card (Semester 1/3/5) */}
             <div
-              className="rounded-2xl p-5 shadow-md flex-1 min-w-0 transition-colors duration-500"
+              className="flex-1 min-w-0 p-5 transition-colors duration-500 shadow-md rounded-2xl"
               style={{
                 backgroundColor: "var(--bg-card)",
                 boxShadow: "0 4px 6px var(--shadow-card)",
@@ -1060,7 +1113,7 @@ const App = () => {
               {" "}
               {/* Use CSS variables for bg and shadow */}
               <p
-                className="text-xl font-bold mb-3 tracking-tight"
+                className="mb-3 text-xl font-bold tracking-tight"
                 style={{ color: "var(--text-semester-title)" }}
               >
                 {" "}
@@ -1071,7 +1124,9 @@ const App = () => {
                 <div
                   key={subject.code}
                   className={`mb-0 transition-colors duration-500 ${
-                    subject.isNonGpa ? "rounded-lg p-2 mb-2" : ""
+                    subject.isNonGpa
+                      ? "rounded-lg p-2 mb-2 bg-yellow-50 border"
+                      : ""
                   }`}
                   style={
                     subject.isNonGpa ? { backgroundColor: "" } : {}
@@ -1079,15 +1134,25 @@ const App = () => {
                 >
                   <div className="flex justify-between items-center mb-0.5">
                     <p
-                      className="text-base font-semibold flex-1"
+                      className="flex items-center flex-1 text-base font-semibold"
                       style={{ color: "var(--text-primary)" }}
                     >
                       {" "}
                       {/* Use CSS variable for text color */}
                       {subject.name}
+                      {subject.isNonGpa && (
+                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                          Enhancement
+                        </span>
+                      )}
+                      {subject.isOptional && (
+                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                          Optional
+                        </span>
+                      )}
                     </p>
                     <p
-                      className="text-sm ml-2 font-medium"
+                      className="ml-2 text-sm font-medium"
                       style={{ color: "var(--text-secondary)" }}
                     >
                       {" "}
@@ -1137,7 +1202,7 @@ const App = () => {
                   </div>
                   {idx !== subjects[year][semesterKey1].length - 1 && (
                     <div
-                      className="h-px my-1 rounded transition-colors duration-500"
+                      className="h-px my-1 transition-colors duration-500 rounded"
                       style={{ backgroundColor: "var(--border-divider)" }}
                     />
                   )}
@@ -1146,14 +1211,14 @@ const App = () => {
             </div>
             {/* Right Card (Semester 2/4/6) */}
             <div
-              className="rounded-2xl p-5 shadow-md flex-1 min-w-0 transition-colors duration-500"
+              className="flex-1 min-w-0 p-5 transition-colors duration-500 shadow-md rounded-2xl"
               style={{
                 backgroundColor: "var(--bg-card)",
                 boxShadow: "0 4px 6px var(--shadow-card)",
               }}
             >
               <p
-                className="text-xl font-bold mb-3 tracking-tight"
+                className="mb-3 text-xl font-bold tracking-tight"
                 style={{ color: "var(--text-semester-title)" }}
               >
                 Semester {year === "year1" ? 2 : year === "year2" ? 4 : 6}
@@ -1162,7 +1227,9 @@ const App = () => {
                 <div
                   key={subject.code}
                   className={`mb-0 transition-colors duration-500 ${
-                    subject.isNonGpa ? "rounded-lg p-2 mb-2" : ""
+                    subject.isNonGpa
+                      ? "rounded-lg p-2 mb-2 bg-yellow-50 border"
+                      : ""
                   }`}
                   style={
                     subject.isNonGpa ? { backgroundColor: "" } : {}
@@ -1170,15 +1237,25 @@ const App = () => {
                 >
                   <div className="flex justify-between items-center mb-0.5">
                     <p
-                      className="text-base font-semibold flex-1"
+                      className="flex-1 text-base font-semibold"
                       style={{ color: "var(--text-primary)" }}
                     >
                       {" "}
                       {/* Use CSS variable for text color */}
                       {subject.name}
+                      {subject.isNonGpa && (
+                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                          Enhancement
+                        </span>
+                      )}
+                      {subject.isOptional && (
+                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                          Optional
+                        </span>
+                      )}
                     </p>
                     <p
-                      className="text-sm ml-2 font-medium"
+                      className="ml-2 text-sm font-medium"
                       style={{ color: "var(--text-secondary)" }}
                     >
                       {" "}
@@ -1228,7 +1305,7 @@ const App = () => {
                   </div>
                   {idx !== subjects[year][semesterKey2].length - 1 && (
                     <div
-                      className="h-px my-1 rounded transition-colors duration-500"
+                      className="h-px my-1 transition-colors duration-500 rounded"
                       style={{ backgroundColor: "var(--border-divider)" }}
                     />
                   )}
@@ -1238,7 +1315,7 @@ const App = () => {
           </div>
           {/* GPA Result Card */}
           <div
-            className="rounded-2xl flex flex-col items-center p-6 mt-4 mb-6 shadow-sm max-w-2xl mx-auto w-full transition-colors duration-500"
+            className="flex flex-col items-center w-full max-w-2xl p-6 mx-auto mt-4 mb-6 transition-colors duration-500 shadow-sm rounded-2xl"
             style={{
               backgroundColor: "var(--bg-gpa-result)",
               boxShadow: "0 1px 2px var(--shadow-blue)",
@@ -1246,7 +1323,7 @@ const App = () => {
           >
             <p className="text-4xl mb-1.5">🎯</p>
             <p
-              className="text-lg font-bold mb-1"
+              className="mb-1 text-lg font-bold"
               style={{ color: "var(--text-title)" }}
             >
               Your {yearLabel} GPA
@@ -1257,34 +1334,203 @@ const App = () => {
             >
               {gpa}
             </p>
-          </div>
-          {/* Credits Info Card */}
-          <div
-            className="rounded-xl p-4 mt-3 mb-6 shadow-sm max-w-2xl mx-auto w-full transition-colors duration-500"
-            style={{
-              backgroundColor: "var(--bg-credits-info)",
-              boxShadow: "0 1px 2px var(--shadow-default)",
-            }}
-          >
+
             <p
-              className="text-base text-center font-medium"
+              className="text-base font-medium text-center mt-9"
               style={{ color: "var(--text-credits-info)" }}
             >
               Total Credits Earned This Year:{" "}
               <span className="font-bold">{earnedCredits}</span>
             </p>
             <p
-              className="text-base text-center font-medium mt-1"
+              className="mt-1 text-base font-medium text-center"
               style={{ color: "var(--text-credits-info)" }}
             >
               Total <span className="font-bold">GPA Credits</span> Earned This
               Year: <span className="font-bold">{earnedGpaCredits}</span>
             </p>
           </div>
+          {/* Year summary left side and campus eligibility criteria for proceed to next year info check whether completed this criteria (Yes or No) right side Ex: some student not earned GPA credits at least 20 : NO */}
+          <div
+            className="flex flex-col w-full max-w-2xl p-4 mx-auto mt-3 mb-6 transition-colors duration-500 shadow-sm rounded-xl"
+            style={{
+              backgroundColor: "var(--bg-credits-info)",
+              boxShadow: "0 1px 2px var(--shadow-default)",
+            }}
+          >
+            <div className="flex flex-col md:flex-row">
+              {/* Left Side: Year Summary */}
+              <div className="flex-1 p-4">
+                <p
+                  className="mb-2 text-lg font-bold"
+                  style={{ color: "var(--text-title)" }}
+                >
+                  Year Summary
+                </p>
+                <p
+                  className="mt-1 text-base"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Overall GPA: <span className="font-bold">{gpa}</span>
+                </p>
+                <p
+                  className="mt-1 text-base"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Total Credits Earned:{" "}
+                  <span className="font-bold">{earnedCredits}</span>
+                </p>
+                <p
+                  className="text-base"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Total GPA Credits Earned:{" "}
+                  <span className="font-bold">{earnedGpaCredits}</span>
+                </p>
+              </div>
+              {/* Right Side: Campus Eligibility Criteria */}
+              <div className="flex-1 p-4 border-l border-gray-200 dark:border-gray-700">
+                <p
+                  className="mb-2 text-lg font-bold"
+                  style={{ color: "var(--text-title)" }}
+                >
+                  Campus Eligibility Criteria
+                </p>
+                {(() => {
+                  // Calculate criteria for this year
+                  const { gpa, canProceed, warningMsg } =
+                    getYearCalculationStatus(year);
+
+                  // Calculate min 20 GPA credits with grade C or above
+                  let min20CreditsWith2 = 0;
+                  let allEnhancementPass = true;
+                  let hasGradeBelow1 = false;
+
+                  for (const semesterKey in subjects[year]) {
+                    subjects[year][semesterKey].forEach((subject) => {
+                      const grade = grades[year][semesterKey][subject.code];
+                      if (
+                        !subject.isNonGpa &&
+                        grade &&
+                        grade !== "" &&
+                        grade !== "Not Sit" &&
+                        gpvTable[grade] !== undefined &&
+                        gpvTable[grade] >= 2.0
+                      ) {
+                        min20CreditsWith2 += subject.gpaCredits;
+                      }
+                      if (subject.isNonGpa && grade !== "Pass") {
+                        allEnhancementPass = false;
+                      }
+                      if (
+                        !subject.isNonGpa &&
+                        (grade === "E" ||
+                          grade === "F" ||
+                          grade === "Not Sit" ||
+                          grade === "" ||
+                          grade === undefined ||
+                          (grade &&
+                            gpvTable[grade] !== undefined &&
+                            gpvTable[grade] < 1.0))
+                      ) {
+                        hasGradeBelow1 = true;
+                      }
+                    });
+                  }
+
+                  return (
+                    <div>
+                      <ul className="space-y-2">
+                        <li className="flex items-start justify-between">
+                          <span className="flex items-center">
+                            <span className="mr-2 text-lg">•</span>
+                            GPA at least 2.00
+                          </span>
+                          <span
+                            className={`font-bold ${
+                              parseFloat(gpa) >= 2.0
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {parseFloat(gpa) >= 2.0 ? "Yes" : "No"}
+                          </span>
+                        </li>
+                        <li className="flex items-start justify-between">
+                          <span className="flex items-center">
+                            <span className="mr-2 text-lg">•</span>
+                            At least 20 GPA credits with grade C or above
+                          </span>
+                          <span
+                            className={`font-bold ${
+                              min20CreditsWith2 >= 20
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {min20CreditsWith2 >= 20 ? "Yes" : "No"}
+                          </span>
+                        </li>
+                        <li className="flex items-start justify-between">
+                          <span className="flex items-center">
+                            <span className="mr-2 text-lg">•</span>
+                            All enhancement (non-GPA) courses are PASS
+                          </span>
+                          <span
+                            className={`font-bold ${
+                              allEnhancementPass
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {allEnhancementPass ? "Yes" : "No"}
+                          </span>
+                        </li>
+                        <li className="flex items-start justify-between">
+                          <span className="flex items-center">
+                            <span className="mr-2 text-lg">•</span>
+                            No course with grade below 1.00 (E, F, Not Sit, or
+                            empty)
+                          </span>
+                          <span
+                            className={`font-bold ${
+                              !hasGradeBelow1
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {!hasGradeBelow1 ? "Yes" : "No"}
+                          </span>
+                        </li>
+                      </ul>
+                      <div className="flex items-center pt-3 mt-4 border-t">
+                        <span className="font-semibold">
+                          Can you proceed to next year
+                          {year === "year1"
+                            ? " (Year 2)"
+                            : year === "year2"
+                            ? " (Year 3)"
+                            : " (Overall)"}
+                          :
+                        </span>
+                        <span
+                          className={`ml-2 font-bold ${
+                            canProceed ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {canProceed ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
           {/* Reset Button */}
-          <div className="flex justify-center mb-2 max-w-2xl mx-auto w-full">
+          <div className="flex justify-center w-full max-w-2xl mx-auto mb-2">
             <button
-              className="py-3 px-8 rounded-lg flex items-center justify-center mt-1 mb-2 shadow-md text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
+              className="flex items-center justify-center px-8 py-3 mt-1 mb-2 text-base font-bold tracking-wide text-white transition duration-300 rounded-lg shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
               style={{
                 backgroundColor: "orange",
                 boxShadow: "0 4px 6px var(--shadow-orange-btn)",
@@ -1307,9 +1553,7 @@ const App = () => {
           </div>
           {/* Next Year Button */}
           <button
-            className="w-full py-4 rounded-xl flex items-center justify-center my-3 shadow-md
-    bg-blue-600 dark:bg-blue-700 shadow-blue-600/20 dark:shadow-black/30 hover:bg-blue-700 dark:hover:bg-blue-600
-    text-white text-lg font-bold tracking-wide transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 max-w-2xl mx-auto"
+            className="flex items-center justify-center w-full max-w-2xl py-4 mx-auto my-3 text-lg font-bold tracking-wide text-white transition duration-300 bg-blue-600 shadow-md rounded-xl dark:bg-blue-700 shadow-blue-600/20 dark:shadow-black/30 hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             onClick={() => {
               setWarningMessage(""); // Optionally clear warning
               setCurrentScreen(
@@ -1326,7 +1570,7 @@ const App = () => {
           {/* Back Button (if not Year 1) */}
           {year !== "year1" && (
             <button
-              className="w-full py-3 rounded-xl flex items-center justify-center mt-1 mb-8 shadow-md text-white text-base font-bold tracking-wide transition duration-300 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 max-w-2xl mx-auto"
+              className="flex items-center justify-center w-full max-w-2xl py-3 mx-auto mt-1 mb-8 text-base font-bold tracking-wide text-white transition duration-300 shadow-md rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50"
               style={{
                 backgroundColor: "#808080",
                 boxShadow: "0 2px 4px var(--shadow-slate-btn)",
@@ -1357,7 +1601,7 @@ const App = () => {
       {/* Theme Toggle Button - positioned fixed for all pages */}
       <button
         onClick={toggleTheme}
-        className="fixed top-5 right-5 p-3 rounded-full shadow-md transition-colors duration-300 z-50 hover:scale-105"
+        className="fixed z-50 p-3 transition-colors duration-300 rounded-full shadow-md top-5 right-5 hover:scale-105"
         style={{
           backgroundColor: "var(--bg-toggle-button)",
           boxShadow: "0 4px 6px var(--shadow-default)",
