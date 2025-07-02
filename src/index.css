@@ -24,6 +24,7 @@
   --bg-alert-success: #d1fae5;
   --bg-select: #f1f5f9;
   --bg-toggle-button: #e2e8f0;
+  --bg-enhancement: #fbf9d8; /* Tailwind yellow-100 or similar for light mode */
 
   /* Text Colors */
   --text-primary: #334155;
@@ -96,6 +97,7 @@ html.dark {
   --bg-alert-success: #1a3a2a;
   --bg-select: #4a5568;
   --bg-toggle-button: #374151;
+  --bg-enhancement: #0c0f58; /* A dark yellow/brown for dark mode */
 
   /* Text Colors */
   --text-primary: #e2e8f0;
@@ -206,7 +208,7 @@ html.dark ::-webkit-scrollbar-thumb {
   background-color: var(--bg-card);
 }
 .bg-yellow-50 {
-  background-color: var(--bg-card-non-gpa);
+  background-color: var(--bg-enhancement);
 }
 .bg-red-100 {
   background-color: var(--bg-alert-danger);

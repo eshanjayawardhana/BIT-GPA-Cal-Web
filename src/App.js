@@ -17,6 +17,9 @@ const App = () => {
   // New state for managing the current theme: 'light' or 'dark'.
   const [theme, setTheme] = useState("light"); // Default to light theme
 
+  // State to manage the selected optional code for Level III subjects.
+  const [selectedOptionalCode, setSelectedOptionalCode] = useState(null);
+
   // This useEffect hook will handle adding/removing the 'dark' class to the <html> tag.
   // This is crucial for applying CSS Variables based on the theme.
   useEffect(() => {
@@ -42,6 +45,7 @@ const App = () => {
     "D+": 1.3,
     D: 1.0,
     E: 0.0,
+    "AB(absent)": 0.0,
   };
 
   // subjects: A comprehensive object detailing all subjects across different years and semesters.
@@ -288,6 +292,50 @@ const App = () => {
     },
   };
 
+  const getYear3CreditSummary = useCallback(() => {
+    let currentYear1NormalCredits = 0; // Level I credits
+    let currentYear2NormalCredits = 0; // Level II credits
+    let currentYear3NormalCredits = 0; // Level III credits
+    let currentTotalNormalCredits = 0; // All Levels Total credits
+
+    // All Levels Total credits and Level-wise credits calculation
+    ["year1", "year2", "year3"].forEach((yearKey) => {
+      for (const semesterKey in subjects[yearKey]) {
+        subjects[yearKey][semesterKey].forEach((subject) => {
+          const grade = grades[yearKey][semesterKey][subject.code];
+
+          // GPA subjects: Credits are counted only if grade is C or better (GPV >= 2.0)
+          // Non-GPA subjects: Credits are counted only if grade is "Pass"
+          if (
+            (!subject.isNonGpa &&
+              grade &&
+              gpvTable[grade] !== undefined &&
+              gpvTable[grade] >= 2.0) ||
+            (subject.isNonGpa && grade === "Pass")
+          ) {
+            currentTotalNormalCredits += subject.credits; // Total credits for 90-credit degree requirement
+
+            // Level-wise credits එකතු කරනවා
+            if (yearKey === "year1") {
+              currentYear1NormalCredits += subject.credits;
+            } else if (yearKey === "year2") {
+              currentYear2NormalCredits += subject.credits;
+            } else if (yearKey === "year3") {
+              currentYear3NormalCredits += subject.credits;
+            }
+          }
+        });
+      }
+    });
+
+    return {
+      year1NormalCredits: currentYear1NormalCredits,
+      year2NormalCredits: currentYear2NormalCredits,
+      year3NormalCredits: currentYear3NormalCredits,
+      totalNormalCredits: currentTotalNormalCredits,
+      isTotalCreditsMet: currentTotalNormalCredits >= 90,
+    };
+  }, [grades, subjects, gpvTable]);
   // Grade options for GPA subjects, including the "Not Sit" option.
   const gradeOptions = [
     "A+",
@@ -302,6 +350,7 @@ const App = () => {
     "D+",
     "D",
     "E",
+    "AB(absent)",
     "Not Sit",
   ];
   // Grade options for non-GPA subjects.
@@ -369,11 +418,25 @@ const App = () => {
 
             // Rule 4: Check for any course with grade point < 1.00 (E, F, Not Sit, or empty).
             if (
-              grade === "E" ||
-              grade === "F" || // 'F' is not in gradeOptions but included for completeness if it were
-              grade === "Not Sit" ||
-              grade === "" || // Empty grade means not selected
-              (grade && gpvTable[grade] !== undefined && gpvTable[grade] < 1.0)
+              !subject.isNonGpa &&
+              ((!subject.isOptional &&
+                (grade === "E" ||
+                  grade === "F" ||
+                  grade === "Not Sit" ||
+                  grade === "AB(absent)" ||
+                  grade === "" ||
+                  grade === undefined ||
+                  (grade &&
+                    gpvTable[grade] !== undefined &&
+                    gpvTable[grade] < 1.0))) ||
+                (subject.isOptional &&
+                  grade &&
+                  grade !== "" &&
+                  (grade === "E" ||
+                    grade === "F" ||
+                    grade === "AB(absent)" ||
+                    grade === "Not Sit" ||
+                    (gpvTable[grade] !== undefined && gpvTable[grade] < 1.0))))
             ) {
               hasGradeBelow1 = true;
             }
@@ -391,22 +454,75 @@ const App = () => {
       // Check Level I & II progression rules (for year1 and year2).
       if (year === "year1" || year === "year2" || year === "year3") {
         // Check for any missing grades in GPA subjects
+        // let missingGrade = false;
+        // for (const semesterKey in subjects[year]) {
+        //   subjects[year][semesterKey].forEach((subject) => {
+        //     if (
+        //       !subject.isNonGpa &&
+        //       (grades[year][semesterKey][subject.code] === undefined ||
+        //         grades[year][semesterKey][subject.code] === "")
+        //     ) {
+        //       missingGrade = true;
+        //     }
+        //   });
+        // }
         let missingGrade = false;
-        for (const semesterKey in subjects[year]) {
-          subjects[year][semesterKey].forEach((subject) => {
-            if (
-              !subject.isNonGpa &&
-              (grades[year][semesterKey][subject.code] === undefined ||
-                grades[year][semesterKey][subject.code] === "")
-            ) {
-              missingGrade = true;
-            }
-          });
+        if (year === "year3") {
+          // For year 3, allow one optional subject to be left blank
+          let optionalGrades = [];
+          let nonOptionalMissing = false;
+          for (const semesterKey in subjects.year3) {
+            subjects.year3[semesterKey].forEach((subject) => {
+              const grade = grades.year3[semesterKey][subject.code];
+              if (!subject.isNonGpa && subject.isOptional) {
+                optionalGrades.push(grade);
+              } else if (
+                !subject.isNonGpa &&
+                (grade === undefined || grade === "")
+              ) {
+                nonOptionalMissing = true;
+              }
+            });
+          }
+          if (nonOptionalMissing) {
+            missingGrade = true;
+            msg =
+              "❗You cannot proceed: All GPA subjects must have a grade selected.";
+          } else if (
+            optionalGrades.filter((g) => g && g !== "" && g !== "Not Sit")
+              .length === 0
+          ) {
+            missingGrade = true;
+            msg =
+              "At least one optional subject in Level III (Year 3) must be passed with a grade of C or better.";
+          }
+          // At least one optional subject must be filled
+          if (
+            nonOptionalMissing ||
+            optionalGrades.filter((g) => g && g !== "").length === 0
+          ) {
+            missingGrade = true;
+          }
+        } else {
+          // For other years, all GPA subjects must have a grade
+          for (const semesterKey in subjects[year]) {
+            subjects[year][semesterKey].forEach((subject) => {
+              if (
+                !subject.isNonGpa &&
+                (grades[year][semesterKey][subject.code] === undefined ||
+                  grades[year][semesterKey][subject.code] === "")
+              ) {
+                missingGrade = true;
+              }
+            });
+          }
         }
         if (missingGrade) {
           canProceed = false;
-          msg =
-            "❗You cannot proceed: All GPA subjects must have a grade selected.";
+          if (!msg) {
+            msg =
+              "❗You cannot proceed: All GPA subjects must have a grade selected.";
+          }
         } else if (parseFloat(gpa) < 2.0) {
           canProceed = false;
           msg = "❗You cannot proceed: GPA must be at least 2.00.";
@@ -421,11 +537,32 @@ const App = () => {
         } else if (hasGradeBelow1) {
           canProceed = false;
           msg =
-            "❗You cannot proceed: You have a course with grade point less than 1.00 (E, F, Not Sit, or empty).";
+            "❗You cannot proceed: You have a course with grade point less than 1.00 (E, AB(absent), Not Sit, or empty).";
         } else {
           // All campus criteria are met, so you can proceed, even if there are repeats.
           canProceed = true;
           msg = "";
+        }
+        // Additional check for Year 3: Software Development Project (IT5106*) must be at least C
+        if (year === "year3") {
+          let projectGrade = null;
+          for (const semesterKey in subjects.year3) {
+            subjects.year3[semesterKey].forEach((subject) => {
+              if (subject.code.startsWith("IT5106")) {
+                const grade = grades.year3[semesterKey][subject.code];
+                projectGrade = grade;
+              }
+            });
+          }
+          if (
+            !projectGrade ||
+            gpvTable[projectGrade] === undefined ||
+            gpvTable[projectGrade] < 2.0
+          ) {
+            canProceed = false;
+            msg =
+              "❗You cannot proceed: You must have at least a 'C' grade for the Software Development Project in Level III.";
+          }
         }
       }
 
@@ -478,6 +615,19 @@ const App = () => {
       ...prev,
       [year]: { ...prev[year], [sem]: { ...prev[year][sem], [code]: grade } },
     }));
+
+    if (
+      year === "year3" &&
+      subjects.year3[sem].some(
+        (subject) => subject.code === code && subject.isOptional
+      )
+    ) {
+      if (grade && grade !== "") {
+        setSelectedOptionalCode(code);
+      } else {
+        setSelectedOptionalCode(null);
+      }
+    }
   };
 
   /**
@@ -550,13 +700,18 @@ const App = () => {
     ];
 
     let totalGpaCredits = 0; // Total GPA credits earned across all years.
+    let totalCredits = 0; // Total credits earned across all years.
     let levelCredits = { year1: 0, year2: 0, year3: 0 }; // GPA credits earned per level.
-    let levelCcredits = { year1: 0, year2: 0, year3: 0 }; // Credits with a grade of C or better per level.
+    let levelCcredits = { year1: 0, year2: 0, year3: 0 }; // Normal Credits with a grade of C or better per level.
     let allEnhancementPass = true; // Flag for all non-GPA subjects being 'Pass'.
     let noGradeBelowD = true; // Flag for no GPA subject having a grade point less than D (1.0).
     let softwareProjectC = false; // Flag for the final year project having C or better.
     let hasSubjectBelowC = false; // Flag if any GPA subject has grade below C.
     const repeatSubjects = []; // List of subjects that need to be repeated.
+
+    // Track if at least one optional subject in year 3 is passed with C or better
+    let year3OptionalPassed = false;
+    let year3OptionalSubjects = [];
 
     // Iterate through each level (year) to check various eligibility criteria.
     levels.forEach(({ key, label }) => {
@@ -564,56 +719,91 @@ const App = () => {
         subjects[key][semesterKey].forEach((subject) => {
           const grade = grades[key][semesterKey][subject.code];
 
-          // Process GPA subjects.
+          if (
+            !subject.isNonGpa && // මේක GPA subject එකක් නම්
+            grade && // Grade එකක් තියෙනවා නම්
+            gpvTable[grade] !== undefined && // GPV Table එකේ grade එකට අදාල value එක තියෙනවා නම්
+            gpvTable[grade] >= 2.0 // Grade Point Value 2.0 (C) හෝ ඊට වැඩි නම්
+          ) {
+            totalGpaCredits += subject.gpaCredits; // GPA credits (for minimum 20/30 criteria)
+            levelCcredits[key] += subject.gpaCredits; // Level-wise C credits
+            levelCredits[key] += subject.gpaCredits; // Level-wise overall credits with GPA (for 30 criteria if needed)
+            totalCredits += subject.credits; // Total credits for 90-credit degree requirement
+          }
+          // Non-GPA subjects සඳහා: "Pass" නම් පමණක් credits එකතු කරන්න
+          else if (subject.isNonGpa && grade === "Pass") {
+            totalCredits += subject.credits; // Non-GPA credits ද total credits වලට එකතු කළ යුතුයි
+          }
+
+          // Specific check for the Final Year Project (IT5106*) in Level III.
+          if (
+            key === "year3" &&
+            subject.code.startsWith("IT5106") &&
+            grade && // Grade එක හිස් නොවිය යුතුයි
+            gpvTable[grade] !== undefined &&
+            gpvTable[grade] >= 2.0 // Grade C or better
+          ) {
+            softwareProjectC = true;
+          }
+
+          // Check if any GPA subject has a grade point less than D (1.0).
           if (
             !subject.isNonGpa &&
             grade &&
-            grade !== "" &&
-            grade !== "Not Sit" &&
-            gpvTable[grade] !== undefined
+            gpvTable[grade] !== undefined &&
+            gpvTable[grade] < 1.0
           ) {
-            totalGpaCredits += subject.gpaCredits;
-            levelCredits[key] += subject.gpaCredits;
-
-            // Check for credits with grade C or better (GPV >= 2.0).
-            if (gpvTable[grade] >= 2.0) {
-              levelCcredits[key] += subject.gpaCredits;
-            }
-
-            // Specific check for the Final Year Project (IT5106*) in Level III.
-            if (
-              key === "year3" &&
-              subject.code.startsWith("IT5106") &&
-              gpvTable[grade] >= 2.0 // Grade C or better
-            ) {
-              softwareProjectC = true;
-            }
-
-            // Check if any GPA subject has a grade point less than D (1.0).
-            if (gpvTable[grade] < 1.0) {
-              noGradeBelowD = false;
-            }
+            noGradeBelowD = false;
           }
-
           // Process non-GPA subjects (enhancement courses).
+          // allEnhancementPass should be false if ANY non-GPA subject is "Fail" OR "Not Pass"
           if (subject.isNonGpa && grade !== "Pass") {
+            // "Pass" නැති ඕනෑම non-GPA grade එකක් "Fail" ලෙස සලකමු
             allEnhancementPass = false;
           }
-          // Also check non-GPA subjects for "Fail" which would mean grade below D.
-          if (subject.isNonGpa && grade === "Fail") {
-            noGradeBelowD = false;
+
+          // Track if at least one optional subject in year 3 is passed with C or better
+          if (
+            key === "year3" &&
+            subject.isOptional &&
+            grade &&
+            gpvTable[grade] !== undefined &&
+            gpvTable[grade] >= 2.0
+          ) {
+            year3OptionalPassed = true;
+          }
+          // Collect all optional subjects for error reporting
+          if (key === "year3" && subject.isOptional) {
+            year3OptionalSubjects.push({
+              name: subject.name,
+              code: subject.code,
+              grade,
+            });
           }
 
           // Identify subjects that need to be repeated (grades below C for GPA subjects, or "Not Sit").
           if (
             !subject.isNonGpa &&
-            (grade === "C-" ||
-              grade === "D+" ||
-              grade === "D" ||
-              grade === "E" ||
-              grade === "F" ||
-              grade === "Not Sit" ||
-              grade === "") // Empty string means not selected
+            // For optional subjects: only if a grade is selected
+            ((!subject.isOptional &&
+              (grade === "C-" ||
+                grade === "D+" ||
+                grade === "D" ||
+                grade === "E" ||
+                grade === "F" ||
+                grade === "Not Sit" ||
+                grade === "AB(absent)" ||
+                grade === "")) || // Empty string means not selected
+              (subject.isOptional &&
+                grade &&
+                grade !== "" &&
+                (grade === "C-" ||
+                  grade === "D+" ||
+                  grade === "D" ||
+                  grade === "E" ||
+                  grade === "F" ||
+                  grade === "Not Sit" ||
+                  grade === "AB(absent)")))
           ) {
             hasSubjectBelowC = true;
             repeatSubjects.push(
@@ -626,32 +816,44 @@ const App = () => {
       }
     });
 
+    if (year3OptionalSubjects.length > 0) {
+      const allEmpty = year3OptionalSubjects.every(
+        (subj) => !subj.grade || subj.grade === "" || subj.grade === "Not Sit"
+      );
+      if (allEmpty) {
+        year3OptionalPassed = false;
+      }
+    }
+
     // Calculate the overall GPA using the provided function.
     const overallGpa = parseFloat(calculateOverallGPA());
 
     // Determine overall eligibility based on all accumulated conditions.
     const eligible =
-      totalGpaCredits >= 90 &&
-      levelCredits.year1 >= 30 &&
-      levelCredits.year2 >= 30 &&
-      levelCredits.year3 >= 30 &&
+      // totalGpaCredits >= 90 &&
+      totalCredits >= 90 && // Changed to total credits for overall eligibility
+      // levelCredits.year1 >= 30 &&
+      // levelCredits.year2 >= 30 &&
+      // levelCredits.year3 >= 30 &&
       overallGpa >= 2.0 &&
       levelCcredits.year1 >= 20 &&
       levelCcredits.year2 >= 20 &&
       levelCcredits.year3 >= 20 &&
       softwareProjectC &&
       allEnhancementPass &&
-      noGradeBelowD; // Crucial: No subjects with grade below C.
+      noGradeBelowD && // Crucial: No subjects with grade below C.
+      year3OptionalPassed; // <-- Only require one optional subject passed
 
     // Collect all reasons why the user is not eligible.
     const failed = [];
-    if (totalGpaCredits < 90) failed.push("Minimum 90 GPA credits not earned.");
-    if (levelCredits.year1 < 30)
-      failed.push("Less than 30 GPA credits in Level I.");
-    if (levelCredits.year2 < 30)
-      failed.push("Less than 30 GPA credits in Level II.");
-    if (levelCredits.year3 < 30)
-      failed.push("Less than 30 GPA credits in Level III.");
+    // if (totalGpaCredits < 90) failed.push("Minimum 90 GPA credits not earned.");
+    if (totalCredits < 90) failed.push("Minimum 90 total credits not earned."); // means: Total credits earned across all years are less than 90.
+    // if (levelCredits.year1 < 30)
+    //   failed.push("Less than 30 GPA credits in Level I.");
+    // if (levelCredits.year2 < 30)
+    //   failed.push("Less than 30 GPA credits in Level II.");
+    // if (levelCredits.year3 < 30)
+    //   failed.push("Less than 30 GPA credits in Level III.");
     if (overallGpa < 2.0) failed.push("Overall GPA is less than 2.00.");
     if (levelCcredits.year1 < 20)
       failed.push("Less than 20 credits with grade C or better in Level I.");
@@ -667,6 +869,10 @@ const App = () => {
       failed.push("Not all enhancement (non-GPA) courses are PASS.");
     if (!noGradeBelowD)
       failed.push("There is a grade below D in at least one course.");
+    if (!year3OptionalPassed)
+      failed.push(
+        "At least one optional subject in Level III (Year 3) must be passed with a grade of C or better."
+      );
     if (hasSubjectBelowC)
       failed.push(
         "You have at least one subject with a grade below C (C-, D+, D, E, F, Not Sit, or not selected). You must repeat and pass that subject with at least a C grade to be eligible for the degree."
@@ -675,8 +881,10 @@ const App = () => {
     return {
       eligible,
       failed,
-      totalGpaCredits,
+      // totalGpaCredits,
+      totalCredits, // Return total credits instead of GPA credits
       levelCredits,
+      levelCcredits,
       overallGpa,
       repeatSubjects, // Return the list of subjects to repeat
     };
@@ -790,7 +998,8 @@ const App = () => {
     const {
       eligible,
       failed,
-      totalGpaCredits,
+      // totalGpaCredits,
+      totalCredits, // Use total credits instead of GPA credits
       levelCredits,
       overallGpa,
       repeatSubjects,
@@ -868,8 +1077,8 @@ const App = () => {
                   className="mb-2 text-lg font-bold"
                   style={{ color: "var(--text-alert-warning-main)" }}
                 >
-                  You are eligible for the degree, but you must repeat the
-                  following subjects to improve your grades:
+                  You are eligible for the degree, but you have repeat subjects.
+                  You can increase your credit value by retaking them.
                 </p>
                 {repeatSubjects.map((subj, idx) => (
                   <p
@@ -1120,94 +1329,126 @@ const App = () => {
                 {/* Use CSS variable for text color */}
                 Semester {year === "year1" ? 1 : year === "year2" ? 3 : 5}
               </p>
-              {subjects[year][semesterKey1].map((subject, idx) => (
-                <div
-                  key={subject.code}
-                  className={`mb-0 transition-colors duration-500 ${
-                    subject.isNonGpa
-                      ? "rounded-lg p-2 mb-2 bg-yellow-50 border"
-                      : ""
-                  }`}
-                  style={
-                    subject.isNonGpa ? { backgroundColor: "" } : {}
-                  } /* Use CSS variable for bg */
-                >
-                  <div className="flex justify-between items-center mb-0.5">
-                    <p
-                      className="flex items-center flex-1 text-base font-semibold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {" "}
-                      {/* Use CSS variable for text color */}
-                      {subject.name}
-                      {subject.isNonGpa && (
-                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
-                          Enhancement
-                        </span>
-                      )}
-                      {subject.isOptional && (
-                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
-                          Optional
-                        </span>
-                      )}
-                    </p>
-                    <p
-                      className="ml-2 text-sm font-medium"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {" "}
-                      {/* Use CSS variable for text color */}
-                      {subject.credits} Credits
-                    </p>
-                  </div>
+              {subjects[year][semesterKey1]
+                .filter(
+                  (subject) =>
+                    !(
+                      year === "year3" &&
+                      subject.isOptional &&
+                      selectedOptionalCode &&
+                      subject.code !== selectedOptionalCode
+                    )
+                )
+                .map((subject, idx) => (
                   <div
-                    className={`rounded-lg border mt-1.5 mb-2 overflow-hidden transition-colors duration-500`}
-                    style={{
-                      backgroundColor: "var(--bg-select)",
-                      borderColor: subject.isNonGpa
-                        ? "var(--border-select-nongpa)"
-                        : "var(--border-select)",
-                    }} /* Use CSS variables for bg and border */
+                    key={subject.code}
+                    className={`mb-0 transition-colors duration-500 ${
+                      subject.isNonGpa ? "rounded-lg p-2 mb-2  border" : ""
+                    }`}
+                    style={
+                      subject.isNonGpa
+                        ? { backgroundColor: "var(--bg-enhancement)" }
+                        : {}
+                    } /* Use CSS variable for bg */
                   >
-                    <select
-                      value={
-                        grades[year][semesterKey1][subject.code] !== undefined
-                          ? grades[year][semesterKey1][subject.code]
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleGradeChange(
-                          year,
-                          semesterKey1,
-                          subject.code,
-                          e.target.value
-                        )
-                      }
-                      className="w-full min-w-[140px] h-14 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-500"
-                      style={{
-                        color: "var(--text-select)",
-                        backgroundColor: "var(--bg-select)",
-                      }} /* Use CSS variables for text and bg */
-                    >
-                      <option value="">Select Grade</option>
-                      {(subject.isNonGpa
-                        ? nonGpaGradeOptions
-                        : gradeOptions
-                      ).map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {idx !== subjects[year][semesterKey1].length - 1 && (
+                    <div className="flex justify-between items-center mb-0.5">
+                      <p
+                        className="flex-1 text-base font-semibold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {" "}
+                        {/* Use CSS variable for text color */}
+                        {subject.name}
+                        {subject.isNonGpa && (
+                          <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                            Enhancement
+                          </span>
+                        )}
+                        {subject.isOptional && (
+                          <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                            Optional
+                          </span>
+                        )}
+                      </p>
+                      <p
+                        className="ml-2 text-sm font-medium"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        {" "}
+                        {/* Use CSS variable for text color */}
+                        {subject.credits} Credits
+                      </p>
+                    </div>
                     <div
-                      className="h-px my-1 transition-colors duration-500 rounded"
-                      style={{ backgroundColor: "var(--border-divider)" }}
-                    />
-                  )}
-                </div>
-              ))}
+                      className={`rounded-lg border mt-1.5 mb-2 overflow-hidden transition-colors duration-500`}
+                      style={{
+                        backgroundColor: "var(--bg-select)",
+                        borderColor: subject.isNonGpa
+                          ? "var(--border-select-nongpa)"
+                          : "var(--border-select)",
+                      }} /* Use CSS variables for bg and border */
+                    >
+                      <select
+                        value={
+                          grades[year][semesterKey1][subject.code] !== undefined
+                            ? grades[year][semesterKey1][subject.code]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleGradeChange(
+                            year,
+                            semesterKey1,
+                            subject.code,
+                            e.target.value
+                          )
+                        }
+                        onFocus={() => {
+                          if (
+                            year === "year3" &&
+                            subject.isOptional &&
+                            selectedOptionalCode &&
+                            subject.code !== selectedOptionalCode
+                          ) {
+                            setSelectedOptionalCode(null);
+                          }
+                        }}
+                        className="w-full min-w-[140px] h-14 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-500"
+                        style={{
+                          color: "var(--text-select)",
+                          backgroundColor: "var(--bg-select)",
+                        }} /* Use CSS variables for text and bg */
+                      >
+                        <option value="">Select Grade</option>
+                        {(subject.isNonGpa
+                          ? nonGpaGradeOptions
+                          : gradeOptions
+                        ).map((grade) => (
+                          <option key={grade} value={grade}>
+                            {grade}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {idx !== subjects[year][semesterKey1].length - 1 && (
+                      <div
+                        className="h-px my-1 transition-colors duration-500 rounded"
+                        style={{ backgroundColor: "var(--border-divider)" }}
+                      />
+                    )}
+                  </div>
+                ))}
+              {year === "year3" && (
+                <p className="mt-4 text-xs text-center text-blue-700 dark:text-blue-300">
+                  <b>Hint:</b>
+                  <i>
+                    When you select a grade for one optional subject, the other
+                    will automatically hide. To make it reappear,{" "}
+                    <b>simply click the "selected grade" dropdown </b> for the
+                    optional subject you've already chosen. Both optional
+                    subjects will then become visible again.
+                  </i>
+                </p>
+              )}
             </div>
             {/* Right Card (Semester 2/4/6) */}
             <div
@@ -1223,94 +1464,114 @@ const App = () => {
               >
                 Semester {year === "year1" ? 2 : year === "year2" ? 4 : 6}
               </p>
-              {subjects[year][semesterKey2].map((subject, idx) => (
-                <div
-                  key={subject.code}
-                  className={`mb-0 transition-colors duration-500 ${
-                    subject.isNonGpa
-                      ? "rounded-lg p-2 mb-2 bg-yellow-50 border"
-                      : ""
-                  }`}
-                  style={
-                    subject.isNonGpa ? { backgroundColor: "" } : {}
-                  } /* Use CSS variable for bg */
-                >
-                  <div className="flex justify-between items-center mb-0.5">
-                    <p
-                      className="flex-1 text-base font-semibold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {" "}
-                      {/* Use CSS variable for text color */}
-                      {subject.name}
-                      {subject.isNonGpa && (
-                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
-                          Enhancement
-                        </span>
-                      )}
-                      {subject.isOptional && (
-                        <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
-                          Optional
-                        </span>
-                      )}
-                    </p>
-                    <p
-                      className="ml-2 text-sm font-medium"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {" "}
-                      {/* Use CSS variable for text color */}
-                      {subject.credits} Credits
-                    </p>
-                  </div>
+              {subjects[year][semesterKey2]
+                .filter(
+                  (subject) =>
+                    !(
+                      year === "year3" &&
+                      subject.isOptional &&
+                      selectedOptionalCode &&
+                      subject.code !== selectedOptionalCode
+                    )
+                )
+                .map((subject, idx) => (
                   <div
-                    className={`rounded-lg border mt-1.5 mb-2 overflow-hidden transition-colors duration-500`}
-                    style={{
-                      backgroundColor: "var(--bg-select)",
-                      borderColor: subject.isNonGpa
-                        ? "var(--border-select-nongpa)"
-                        : "var(--border-select)",
-                    }} /* Use CSS variables for bg and border */
+                    key={subject.code}
+                    className={`mb-0 transition-colors duration-500 ${
+                      subject.isNonGpa ? "rounded-lg p-2 mb-2  border" : ""
+                    }`}
+                    style={
+                      subject.isNonGpa
+                        ? { backgroundColor: "var(--bg-enhancement)" }
+                        : {}
+                    } /* Use CSS variable for bg */
                   >
-                    <select
-                      value={
-                        grades[year][semesterKey2][subject.code] !== undefined
-                          ? grades[year][semesterKey2][subject.code]
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleGradeChange(
-                          year,
-                          semesterKey2,
-                          subject.code,
-                          e.target.value
-                        )
-                      }
-                      className="w-full min-w-[140px] h-14 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-500"
-                      style={{
-                        color: "var(--text-select)",
-                        backgroundColor: "var(--bg-select)",
-                      }} /* Use CSS variables for text and bg */
-                    >
-                      <option value="">Select Grade</option>
-                      {(subject.isNonGpa
-                        ? nonGpaGradeOptions
-                        : gradeOptions
-                      ).map((grade) => (
-                        <option key={grade} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {idx !== subjects[year][semesterKey2].length - 1 && (
+                    <div className="flex justify-between items-center mb-0.5">
+                      <p
+                        className="flex-1 text-base font-semibold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {" "}
+                        {/* Use CSS variable for text color */}
+                        {subject.name}
+                        {subject.isNonGpa && (
+                          <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                            Enhancement
+                          </span>
+                        )}
+                        {subject.isOptional && (
+                          <span className="ml-2 px-2 py-0.5 rounded bg-yellow-300 text-yellow-900 text-xs font-bold">
+                            Optional
+                          </span>
+                        )}
+                      </p>
+                      <p
+                        className="ml-2 text-sm font-medium"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        {" "}
+                        {/* Use CSS variable for text color */}
+                        {subject.credits} Credits
+                      </p>
+                    </div>
                     <div
-                      className="h-px my-1 transition-colors duration-500 rounded"
-                      style={{ backgroundColor: "var(--border-divider)" }}
-                    />
-                  )}
-                </div>
-              ))}
+                      className={`rounded-lg border mt-1.5 mb-2 overflow-hidden transition-colors duration-500`}
+                      style={{
+                        backgroundColor: "var(--bg-select)",
+                        borderColor: subject.isNonGpa
+                          ? "var(--border-select-nongpa)"
+                          : "var(--border-select)",
+                      }} /* Use CSS variables for bg and border */
+                    >
+                      <select
+                        value={
+                          grades[year][semesterKey2][subject.code] !== undefined
+                            ? grades[year][semesterKey2][subject.code]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleGradeChange(
+                            year,
+                            semesterKey2,
+                            subject.code,
+                            e.target.value
+                          )
+                        }
+                        onFocus={() => {
+                          if (
+                            year === "year3" &&
+                            subject.isOptional &&
+                            selectedOptionalCode &&
+                            subject.code !== selectedOptionalCode
+                          ) {
+                            setSelectedOptionalCode(null);
+                          }
+                        }}
+                        className="w-full min-w-[140px] h-14 px-3 py-2 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-500"
+                        style={{
+                          color: "var(--text-select)",
+                          backgroundColor: "var(--bg-select)",
+                        }} /* Use CSS variables for text and bg */
+                      >
+                        <option value="">Select Grade</option>
+                        {(subject.isNonGpa
+                          ? nonGpaGradeOptions
+                          : gradeOptions
+                        ).map((grade) => (
+                          <option key={grade} value={grade}>
+                            {grade}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {idx !== subjects[year][semesterKey2].length - 1 && (
+                      <div
+                        className="h-px my-1 transition-colors duration-500 rounded"
+                        style={{ backgroundColor: "var(--border-divider)" }}
+                      />
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
           {/* GPA Result Card */}
@@ -1350,22 +1611,22 @@ const App = () => {
               Year: <span className="font-bold">{earnedGpaCredits}</span>
             </p>
           </div>
-          {/* Year summary left side and campus eligibility criteria for proceed to next year info check whether completed this criteria (Yes or No) right side Ex: some student not earned GPA credits at least 20 : NO */}
-          <div
-            className="flex flex-col w-full max-w-2xl p-4 mx-auto mt-3 mb-6 transition-colors duration-500 shadow-sm rounded-xl"
-            style={{
-              backgroundColor: "var(--bg-credits-info)",
-              boxShadow: "0 1px 2px var(--shadow-default)",
-            }}
-          >
-            <div className="flex flex-col md:flex-row">
-              {/* Left Side: Year Summary */}
-              <div className="flex-1 p-4">
+          {/* Responsive container for summary and degree criteria */}
+          <div className="flex flex-col w-full max-w-2xl gap-4 mx-auto mt-3 mb-6 md:flex-row">
+            {/* Left: Year Summary & Campus Eligibility Criteria */}
+            <div
+              className="flex-1 p-4 transition-colors duration-500 shadow-sm rounded-xl"
+              style={{
+                backgroundColor: "var(--bg-credits-info)",
+                boxShadow: "0 1px 2px var(--shadow-default)",
+              }}
+            >
+              <div className="mb-4">
                 <p
                   className="mb-2 text-lg font-bold"
                   style={{ color: "var(--text-title)" }}
                 >
-                  Year Summary
+                  📊 Year Summary
                 </p>
                 <p
                   className="mt-1 text-base"
@@ -1387,25 +1648,24 @@ const App = () => {
                   Total GPA Credits Earned:{" "}
                   <span className="font-bold">{earnedGpaCredits}</span>
                 </p>
+                <p className="mt-4 text-xs italic text-yellow-700 dark:text-yellow-500">
+                  Disclaimer: These results are only for your reference. Final
+                  results and policy decisions will be done by UCSC and this
+                  result has no official binding.
+                </p>
               </div>
-              {/* Right Side: Campus Eligibility Criteria */}
-              <div className="flex-1 p-4 border-l border-gray-200 dark:border-gray-700">
+              <div className="pt-4 border-t">
                 <p
                   className="mb-2 text-lg font-bold"
                   style={{ color: "var(--text-title)" }}
                 >
-                  Campus Eligibility Criteria
+                  🎓 Year Eligibility Criteria
                 </p>
                 {(() => {
-                  // Calculate criteria for this year
-                  const { gpa, canProceed, warningMsg } =
-                    getYearCalculationStatus(year);
-
-                  // Calculate min 20 GPA credits with grade C or above
+                  const { gpa, canProceed } = getYearCalculationStatus(year);
                   let min20CreditsWith2 = 0;
                   let allEnhancementPass = true;
                   let hasGradeBelow1 = false;
-
                   for (const semesterKey in subjects[year]) {
                     subjects[year][semesterKey].forEach((subject) => {
                       const grade = grades[year][semesterKey][subject.code];
@@ -1424,20 +1684,29 @@ const App = () => {
                       }
                       if (
                         !subject.isNonGpa &&
-                        (grade === "E" ||
-                          grade === "F" ||
-                          grade === "Not Sit" ||
-                          grade === "" ||
-                          grade === undefined ||
-                          (grade &&
-                            gpvTable[grade] !== undefined &&
-                            gpvTable[grade] < 1.0))
+                        ((!subject.isOptional &&
+                          (grade === "E" ||
+                            grade === "F" ||
+                            grade === "Not Sit" ||
+                            grade === "" ||
+                            grade === undefined ||
+                            (grade &&
+                              gpvTable[grade] !== undefined &&
+                              gpvTable[grade] < 1.0))) ||
+                          (subject.isOptional &&
+                            grade &&
+                            grade !== "" &&
+                            (grade === "E" ||
+                              grade === "AB(absent)" ||
+                              grade === "F" ||
+                              grade === "Not Sit" ||
+                              (gpvTable[grade] !== undefined &&
+                                gpvTable[grade] < 1.0))))
                       ) {
                         hasGradeBelow1 = true;
                       }
                     });
                   }
-
                   return (
                     <div>
                       <ul className="space-y-2">
@@ -1503,29 +1772,253 @@ const App = () => {
                           </span>
                         </li>
                       </ul>
-                      <div className="flex items-center pt-3 mt-4 border-t">
-                        <span className="font-semibold">
-                          Can you proceed to next year
-                          {year === "year1"
-                            ? " (Year 2)"
-                            : year === "year2"
-                            ? " (Year 3)"
-                            : " (Overall)"}
-                          :
-                        </span>
-                        <span
-                          className={`ml-2 font-bold ${
-                            canProceed ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {canProceed ? "Yes" : "No"}
-                        </span>
-                      </div>
+                      {year !== "year3" && (
+                        <div className="flex items-start justify-between pt-3 mt-4 border-t">
+                          <span className="font-semibold">
+                            Can you proceed to
+                            {year === "year1"
+                              ? " (Year 2)"
+                              : year === "year2"
+                              ? " (Year 3)"
+                              : ""}
+                            :
+                          </span>
+                          <span
+                            className={`ml-2 font-bold ${
+                              canProceed ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {canProceed ? "Yes" : "No"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
               </div>
             </div>
+
+            {/* Right: Degree Credit Criteria (only for Year 3) */}
+            {year === "year3" &&
+              (() => {
+                // Use the real degree eligibility logic
+                const {
+                  eligible: degreeEligible,
+                  // totalGpaCredits,
+                  totalCredits, // Use total credits instead of GPA credits
+                  levelCredits,
+                  levelCcredits,
+                  overallGpa,
+                  failed,
+                } = getDegreeEligibility(
+                  subjects,
+                  grades,
+                  gpvTable,
+                  calculateOverallGPA
+                );
+
+                // Check for Software Project C
+                const softwareProjectGrade = (() => {
+                  let grade = null;
+                  for (const semesterKey in subjects.year3) {
+                    subjects.year3[semesterKey].forEach((subject) => {
+                      if (subject.code.startsWith("IT5106")) {
+                        grade = grades.year3[semesterKey][subject.code];
+                      }
+                    });
+                  }
+                  return grade;
+                })();
+
+                // Check all enhancement pass
+                const allEnhancementPass = !failed.some(
+                  (f) =>
+                    f.toLowerCase().includes("enhancement") ||
+                    f.toLowerCase().includes("non-gpa")
+                );
+
+                // Check for grade below D
+                const noGradeBelowD = !failed.some((f) =>
+                  f.toLowerCase().includes("grade below d")
+                );
+
+                // Color helpers
+                const green = "#059669";
+                const red = "#dc2626";
+
+                return (
+                  <div
+                    className="flex-1 p-4 transition-colors duration-500 shadow-sm rounded-xl"
+                    style={{
+                      backgroundColor: "var(--bg-credits-info)",
+                      boxShadow: "0 2px 8px rgba(96,165,250,0.09)",
+                      // border: `2px solid ${degreeEligible ? green : red}`,
+                    }}
+                  >
+                    <div
+                      className="mb-2 text-lg font-bold"
+                      style={{ color: "var(--text-title)" }}
+                    >
+                      🎓 Degree Credit Criteria
+                    </div>
+                    <ul className="mb-3 space-y-2">
+                      {(() => {
+                        const {
+                          year1NormalCredits,
+                          year2NormalCredits,
+                          year3NormalCredits,
+                          totalNormalCredits,
+                          isTotalCreditsMet,
+                        } = getYear3CreditSummary();
+                        return (
+                          <div className="w-full max-w-lg p-6 mx-auto mb-6 transition-colors duration-500 bg-white rounded-lg shadow-md dark:bg-gray-800">
+                            {/* <h3 className="mb-4 text-xl font-bold text-gray-800 dark:text-gray-100">
+                              🎓 Degree Credit Criteria (Total Credits)
+                            </h3> */}
+                            <p className="mb-2 text-lg text-gray-700 dark:text-gray-300">
+                              Total Credits Earned (All Levels):{" "}
+                              <span className="font-semibold">
+                                {totalNormalCredits}
+                              </span>{" "}
+                              / 90
+                              {isTotalCreditsMet ? (
+                                <span className="ml-2 font-medium text-green-500">
+                                  {" "}
+                                  (Yes)
+                                </span>
+                              ) : (
+                                <span className="ml-2 font-medium text-red-500">
+                                  {" "}
+                                  (No)
+                                </span>
+                              )}
+                            </p>
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                              (You need at least 90 total credits from all
+                              levels to be eligible for the degree.)
+                            </p>
+                            {/* ඔබට අවශ්‍ය නම්, Level III (Year 3) Credits ගණනත් මෙතන පෙන්වන්න පුළුවන්: */}
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                              Credits from Level I (Year 1):{" "}
+                              <span className="font-semibold">
+                                {year1NormalCredits}
+                              </span>
+                            </p>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                              Credits from Level II (Year 2):{" "}
+                              <span className="font-semibold">
+                                {year2NormalCredits}
+                              </span>
+                            </p>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                              Credits from Level III (Year 3):{" "}
+                              <span className="font-semibold">
+                                {year3NormalCredits}
+                              </span>
+                            </p>
+                          </div>
+                        );
+                      })()}
+
+                      <li className="flex items-start justify-between">
+                        <span>
+                          Minimum <b>Overall GPA of 2.00</b>
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            overallGpa >= 2.0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {overallGpa >= 2.0 ? "Yes" : "No"}
+                        </span>
+                      </li>
+                      <li className="flex items-start justify-between">
+                        <span>
+                          Minimum <b>20 credits of "C"</b> for GPA courses in
+                          each Level
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            levelCcredits.year1 >= 20 &&
+                            levelCcredits.year2 >= 20 &&
+                            levelCcredits.year3 >= 20
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {levelCcredits.year1 >= 20 &&
+                          levelCcredits.year2 >= 20 &&
+                          levelCcredits.year3 >= 20
+                            ? "Yes"
+                            : "No"}
+                        </span>
+                      </li>
+                      <li className="flex items-start justify-between">
+                        <span>
+                          At least a <b>"C"</b> grade for Software Development
+                          Project in Level III
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            softwareProjectGrade &&
+                            gpvTable[softwareProjectGrade] >= 2.0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {softwareProjectGrade &&
+                          gpvTable[softwareProjectGrade] >= 2.0
+                            ? "Yes"
+                            : "No"}
+                        </span>
+                      </li>
+                      <li className="flex items-start justify-between">
+                        <span>
+                          <b>PASS</b> grade for all Enhancement (non-GPA)
+                          courses in each Level
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            allEnhancementPass
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {allEnhancementPass ? "Yes" : "No"}
+                        </span>
+                      </li>
+                      <li className="flex items-start justify-between">
+                        <span>
+                          <b>No grade below "D"</b> in any course in each Level
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            noGradeBelowD ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {noGradeBelowD ? "Yes" : "No"}
+                        </span>
+                      </li>
+                    </ul>
+
+                    <div className="flex items-center pt-2 mt-3 border-t">
+                      <span className="flex-1 font-bold">
+                        Can you proceed to (Degree):
+                      </span>
+                      <span
+                        className="ml-2 font-bold"
+                        style={{
+                          color: degreeEligible ? green : red,
+                        }}
+                      >
+                        {degreeEligible ? "✔️ Yes" : "❌ No"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
           </div>
           {/* Reset Button */}
           <div className="flex justify-center w-full max-w-2xl mx-auto mb-2">
@@ -1584,6 +2077,15 @@ const App = () => {
               <span className="mr-2 text-lg">←</span> Back to Previous Year
             </button>
           )}
+          {/* Year/semester page disclaimer */}
+          <p className="w-full max-w-2xl px-2 mx-auto mb-8 text-xs italic text-center text-yellow-700 dark:text-yellow-500">
+            Disclaimer: This Online GPA calculator is provided as a value added
+            support of BIT students @Devo Plus. We tried our best to make this
+            accurate and up to date. While you may use this as a reference
+            value, the UCSC has the final decisions on your GPA calculations and
+            you must strict to results published by the university in your
+            official academic activities.
+          </p>
         </div>
       </div>
     );
@@ -1635,6 +2137,4 @@ const App = () => {
     </div>
   );
 };
-
-// Export the App component as default.
 export default App;
