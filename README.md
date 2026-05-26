@@ -315,8 +315,3 @@ The manifest defines:
 - Standalone display mode.
 - Icon assets from `public`.
 
-## Notes From Current Project Files
-
-- The main calculator logic and UI are implemented in a single component: `src/App.js`.
-- `src/App.test.js` is the default Create React App style test file and currently checks for `learn react` text.
-- `build/` and `node_modules/` are present in the workspace.
