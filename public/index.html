@@ -1,49 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    --><style>
-  body {
-    font-family: 'Inter', sans-serif;
-  }
-</style>
-    <title>BIT GPA Calculator</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+  <title>BIT GPA Calculator | UCSC</title>
+  <meta name="description" content="Easily calculate and track your Bachelor of Information Technology (BIT) Degree GPA at University of Colombo School of Computing (UCSC)." />
+  <meta name="keywords" content="BIT GPA Calculator, UCSC BIT, GPA Calculator, University of Colombo, BIT Degree, Sri Lanka, Ucsc, BIT, BIT Degree" />
+  <meta name="author" content="Eshan Jayawardana" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Social Media & WhatsApp Sharing (Open Graph Tags) -->
+  <meta property="og:title" content="BIT GPA Calculator | UCSC" />
+  <meta property="og:description" content="A quick and easy way to calculate your UCSC BIT Degree GPA." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://bit-gpa-calculator.netlify.app/" />
+  <meta property="og:image" content="%PUBLIC_URL%/preview-image.png" /> 
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+  <!-- apple mobile shortcut icon -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  <!-- android shortcut icon -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-24L5KXC8L4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-24L5KXC8L4');
+  </script>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
 </html>
