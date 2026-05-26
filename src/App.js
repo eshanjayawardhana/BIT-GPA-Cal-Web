@@ -568,7 +568,7 @@ const App = () => {
 
       return { gpa, canProceed, warningMsg: msg };
     },
-    [grades, subjects, gpvTable]
+    [grades, subjects, gpvTable],
   ); // Dependencies: grades, subjects, gpvTable to re-calculate when they change.
 
   // Effect hook to update the warning message based on the current screen and grades.
@@ -619,7 +619,7 @@ const App = () => {
     if (
       year === "year3" &&
       subjects.year3[sem].some(
-        (subject) => subject.code === code && subject.isOptional
+        (subject) => subject.code === code && subject.isOptional,
       )
     ) {
       if (grade && grade !== "") {
@@ -641,7 +641,7 @@ const App = () => {
     if (canProceed) {
       // Determine the next screen based on the current year.
       setCurrentScreen(
-        year === "year1" ? "year2" : year === "year2" ? "year3" : "overall"
+        year === "year1" ? "year2" : year === "year2" ? "year3" : "overall",
       );
     } else {
       // Display the warning message set by useEffect (or directly here if preferred for immediate feedback)
@@ -690,7 +690,7 @@ const App = () => {
     subjects,
     grades,
     gpvTable,
-    calculateOverallGPA
+    calculateOverallGPA,
   ) {
     // Define the levels (years) and their labels for clear display.
     const levels = [
@@ -809,7 +809,7 @@ const App = () => {
             repeatSubjects.push(
               `${label} - ${subject.name} (${subject.code}) [${
                 grade ? grade : "Not Selected"
-              }]`
+              }]`,
             );
           }
         });
@@ -818,7 +818,7 @@ const App = () => {
 
     if (year3OptionalSubjects.length > 0) {
       const allEmpty = year3OptionalSubjects.every(
-        (subj) => !subj.grade || subj.grade === "" || subj.grade === "Not Sit"
+        (subj) => !subj.grade || subj.grade === "" || subj.grade === "Not Sit",
       );
       if (allEmpty) {
         year3OptionalPassed = false;
@@ -863,7 +863,7 @@ const App = () => {
       failed.push("Less than 20 credits with grade C or better in Level III.");
     if (!softwareProjectC)
       failed.push(
-        "Software Development Project in Level III is not at least a C grade."
+        "Software Development Project in Level III is not at least a C grade.",
       );
     if (!allEnhancementPass)
       failed.push("Not all enhancement (non-GPA) courses are PASS.");
@@ -871,11 +871,11 @@ const App = () => {
       failed.push("There is a grade below D in at least one course.");
     if (!year3OptionalPassed)
       failed.push(
-        "At least one optional subject in Level III (Year 3) must be passed with a grade of C or better."
+        "At least one optional subject in Level III (Year 3) must be passed with a grade of C or better.",
       );
     if (hasSubjectBelowC)
       failed.push(
-        "You have at least one subject with a grade below C (C-, D+, D, E, F, Not Sit, or not selected). You must repeat and pass that subject with at least a C grade to be eligible for the degree."
+        "You have at least one subject with a grade below C (C-, D+, D, E, F, Not Sit, or not selected). You must repeat and pass that subject with at least a C grade to be eligible for the degree.",
       );
 
     return {
@@ -918,14 +918,14 @@ const App = () => {
           Welcome to
         </p>{" "}
         {/* Use CSS variable for text color */}
-        <p
+        <h1
           className="mb-2 text-3xl font-bold text-center"
           style={{ color: "var(--text-title)" }}
         >
           {" "}
           {/* Use CSS variable for text color */}
           Colombo BIT GPA Calculator
-        </p>
+        </h1>
         <p
           className="mt-2 text-base text-center mb-7"
           style={{ color: "var(--text-secondary)" }}
@@ -1029,14 +1029,14 @@ const App = () => {
           {" "}
           {/* Use CSS variables for bg and shadow */}
           <p className="mb-2 text-5xl">🏆</p>
-          <p
+          <h2
             className="text-2xl font-bold mb-1.5"
             style={{ color: "var(--text-gpa-overall)" }}
           >
             {" "}
             {/* Use CSS variable for text color */}
             Your Overall GPA
-          </p>
+          </h2>
           <p
             className="text-5xl font-bold mt-0.5"
             style={{ color: "var(--text-gpa-overall)" }}
@@ -1258,8 +1258,8 @@ const App = () => {
       year === "year1"
         ? "Go to Year 2"
         : year === "year2"
-        ? "Go to Year 3"
-        : "View Overall GPA";
+          ? "Go to Year 3"
+          : "View Overall GPA";
 
     // Determine the semester keys based on the current year.
     const semesterKey1 = `semester${
@@ -1279,14 +1279,14 @@ const App = () => {
         <div className="flex-1 w-full max-w-5xl px-4 pt-8 pb-20 mx-auto overflow-y-auto md:px-8">
           {" "}
           {/* Simulate ScrollView */}
-          <p
+          <h2
             className="mb-5 text-3xl font-bold tracking-wide text-center md:text-4xl"
             style={{ color: "var(--text-title)" }}
           >
             {" "}
             {/* Use CSS variable for text color */}
             {yearLabel} GPA Calculation
-          </p>
+          </h2>
           {/* Display warning message if any */}
           {warningMessage ? (
             <div
@@ -1337,7 +1337,7 @@ const App = () => {
                       subject.isOptional &&
                       selectedOptionalCode &&
                       subject.code !== selectedOptionalCode
-                    )
+                    ),
                 )
                 .map((subject, idx) => (
                   <div
@@ -1399,7 +1399,7 @@ const App = () => {
                             year,
                             semesterKey1,
                             subject.code,
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         onFocus={() => {
@@ -1472,7 +1472,7 @@ const App = () => {
                       subject.isOptional &&
                       selectedOptionalCode &&
                       subject.code !== selectedOptionalCode
-                    )
+                    ),
                 )
                 .map((subject, idx) => (
                   <div
@@ -1534,7 +1534,7 @@ const App = () => {
                             year,
                             semesterKey2,
                             subject.code,
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         onFocus={() => {
@@ -1779,8 +1779,8 @@ const App = () => {
                             {year === "year1"
                               ? " (Year 2)"
                               : year === "year2"
-                              ? " (Year 3)"
-                              : ""}
+                                ? " (Year 3)"
+                                : ""}
                             :
                           </span>
                           <span
@@ -1814,7 +1814,7 @@ const App = () => {
                   subjects,
                   grades,
                   gpvTable,
-                  calculateOverallGPA
+                  calculateOverallGPA,
                 );
 
                 // Check for Software Project C
@@ -1834,12 +1834,12 @@ const App = () => {
                 const allEnhancementPass = !failed.some(
                   (f) =>
                     f.toLowerCase().includes("enhancement") ||
-                    f.toLowerCase().includes("non-gpa")
+                    f.toLowerCase().includes("non-gpa"),
                 );
 
                 // Check for grade below D
                 const noGradeBelowD = !failed.some((f) =>
-                  f.toLowerCase().includes("grade below d")
+                  f.toLowerCase().includes("grade below d"),
                 );
 
                 // Color helpers
@@ -2053,8 +2053,8 @@ const App = () => {
                 year === "year1"
                   ? "year2"
                   : year === "year2"
-                  ? "year3"
-                  : "overall"
+                    ? "year3"
+                    : "overall",
               );
             }}
           >
