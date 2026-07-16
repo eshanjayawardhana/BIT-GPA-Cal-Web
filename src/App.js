@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Moon, Sun } from "lucide-react"; // Importing icons for the theme toggle button
+import { Moon, Sun, Target } from "lucide-react"; // Importing icons for the theme toggle button
+import TargetGpaPredictor from "./TargetGpaPredictor";
+import "./TargetGpaPredictor.css";
 
 // The main App component where all the logic and UI reside.
 const App = () => {
@@ -675,6 +677,22 @@ const App = () => {
     return overallCredits
       ? (overallGPAValue / overallCredits).toFixed(2)
       : "0.00";
+  };
+
+  // Adapter for the isolated Target GPA Predictor. The existing GPA calculation remains unchanged.
+  const calculateCompletedGpaCredits = () => {
+    let completedCredits = 0;
+    Object.keys(subjects).forEach((yearKey) => {
+      Object.keys(subjects[yearKey]).forEach((semKey) => {
+        subjects[yearKey][semKey].forEach((subject) => {
+          const grade = grades[yearKey][semKey][subject.code];
+          if (!subject.isNonGpa && grade && gpvTable[grade] != null) {
+            completedCredits += subject.gpaCredits;
+          }
+        });
+      });
+    });
+    return completedCredits;
   };
 
   /**
@@ -2117,6 +2135,19 @@ const App = () => {
         )}
       </button>
 
+      {currentScreen !== "predictor" && (
+        <button
+          type="button"
+          className="target-launcher"
+          onClick={() => setCurrentScreen("predictor")}
+          aria-label="Open Target GPA Predictor"
+          title="Target GPA Predictor"
+        >
+          <Target size={19} />
+          <span>Target GPA</span>
+        </button>
+      )}
+
       {/* Conditional rendering of pages based on currentScreen state. */}
       {(() => {
         switch (currentScreen) {
@@ -2130,6 +2161,14 @@ const App = () => {
             return renderGPACalculator("year3", "Year 3");
           case "overall":
             return renderOverallGPA();
+          case "predictor":
+            return (
+              <TargetGpaPredictor
+                currentGPA={parseFloat(calculateOverallGPA())}
+                completedCredits={calculateCompletedGpaCredits()}
+                onBack={() => setCurrentScreen("entry")}
+              />
+            );
           default:
             return renderEntryPage();
         }
