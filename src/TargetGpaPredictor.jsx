@@ -248,7 +248,7 @@ export default function TargetGpaPredictor({
           </section>
         )}
 
-        <footer className="target-footnote">Based on the grading scale and degree class requirements in the uploaded 2025 handbook. GPA values are rounded to two decimal places.</footer>
+        <footer className="target-footnote">Based on the grading scale and degree class requirements in the 2025 handbook. GPA values are rounded to two decimal places.</footer>
       </div>
     </main>
   );
